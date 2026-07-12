@@ -1,0 +1,114 @@
+CODENAMES — CHANGE LOG
+======================
+Format: [YYYY-MM-DD] <area>: <change> — <justification>
+
+Per project policy, every code change is recorded here with a justification.
+
+[2026-07-11] project-setup: Initialized git repository, feature branch `feature/codenames-mvp`.
+    — Version control from day one; work isolated on a feature branch for a future PR into main.
+[2026-07-11] project-setup: Added package.json with Next.js 15 + React 19, Socket.IO, Prisma, Vitest, Playwright.
+    — Stack chosen with user: Next.js + Socket.IO for real-time multiplayer; SQLite/Prisma for local-first persistence.
+[2026-07-11] project-setup: Added tsconfig, next.config, tailwind + postcss configs, .gitignore, .env.example.
+    — Standard TypeScript-everywhere toolchain; Tailwind for styling; secrets kept out of git via .gitignore.
+[2026-07-11] game-engine: Added pure engine (types.ts, words.ts, engine.ts) with seedable RNG.
+    — Board/key generation (9/8/7/1 distribution), clue validation, guess resolution, turn/win logic.
+      Kept side-effect free so it is fully unit-testable and reusable by the network layer.
+[2026-07-11] game-engine: Added 16 Vitest unit tests (engine.test.ts); all pass.
+    — Lock in the rules (distribution, clue validity, guess outcomes, assassin, win, bonus guess, voluntary pass).
+[2026-07-11] engine: Added forceEndTurn() for server-initiated turn end (timer expiry) without the guess requirement.
+    — The turn timer must be able to end a turn even if the team has not guessed.
+[2026-07-11] realtime: Added shared/protocol.ts wire types (RoomView, events) shared by client and server.
+    — Single source of truth for the socket contract; internal engine types stay server-side so hidden roles are stripped per viewer.
+[2026-07-11] realtime: Added server/rooms/roomManager.ts (in-memory rooms, players, per-viewer view serialization).
+    — Local-first: live state in memory. buildRoomView strips card roles from non-spymasters until revealed.
+[2026-07-11] realtime: Added server/socket/gameServer.ts (authoritative Socket.IO handlers).
+    — Create/join/rejoin, team/role selection, start, clue, guess, endTurn, newGame, chat, settings; turn timer; reconnection grace; persistence on finish.
+[2026-07-11] persistence: Added Prisma schema (User, GameRecord, GameParticipant) + SQLite; prisma client singleton; history service.
+    — Optional accounts + finished-game history without any external service. Generated client and pushed schema.
+[2026-07-11] auth: Added bcrypt+JWT helpers and Next API routes (register, login, me, history).
+    — Guests play with a client identity; registered users get attributed history. Secrets via env.
+[2026-07-11] server: Added custom server (server/index.ts) hosting Next.js and Socket.IO on one port.
+    — Single deployable process for local-first play.
+[2026-07-11] frontend: Added Next.js App Router UI — home (create/join + auth), /room/[code], /history.
+    — Components: RoomClient, Lobby, GameBoard, CardTile, CluePanel, Scoreboard, Chat, Toasts, TurnTimer, AuthPanel.
+      useRoom hook manages socket, room state, and reconnection.
+[2026-07-11] frontend: Marked /room/[code] as force-dynamic.
+    — Removes a Next static-path-generation TypeError; rooms are per-request/live and must not be prerendered.
+[2026-07-11] frontend: Added data-testid/data-* hooks to cards, team columns, and a hidden game-state marker.
+    — Enables deterministic Playwright E2E driving without leaking hidden info (operatives still get no card roles).
+[2026-07-11] tests: Added Playwright config + E2E suite (tests/e2e/game.spec.ts). All pass.
+    — Verifies lobby creation and a full 4-player game to a win with real-time clue propagation across clients.
+[2026-07-11] tests: Configured Playwright to run the production server (npm start) instead of dev.
+    — Dev-mode compilation was heavy enough to cause net::ERR_INSUFFICIENT_RESOURCES under host load; production is light and stable.
+[2026-07-11] verify: npm run typecheck (clean), npm test (16/16), npm run test:e2e (2/2), npm run build (success).
+    — End-to-end verification per project policy before calling the MVP done.
+[2026-07-11] docs: Added README.md (features, rules, stack, structure, setup, testing, limitations).
+[2026-07-11] game-engine: Removed the bonus guess — maxGuessesFor now returns exactly `count` (was `count + 1`).
+    — Per user request: operatives may make exactly the clue number of guesses, not one more. Clue number 0 still = unlimited.
+      Updated engine.test.ts (exact-count + clue-of-1 cases) and README rule text accordingly.
+[2026-07-11] variants: Integrated Codenames: Pictures as a second game variant (source: github.com/samdemaeyer/codenames-pictures).
+    — Per user request: both games in one app with a main-page selector. That repo is a client-only local app; we took its
+      picture assets + variant rules and plugged them into OUR real-time engine rather than running their React app.
+[2026-07-11] variants: Copied 280 picture card images to public/pictures/cards/ (+ ATTRIBUTION.md).
+    — Assets served by Next from the site root at /pictures/cards/card-<id>.jpg. Non-commercial/private-play attribution noted.
+[2026-07-11] variants: Generalized engine (server/game/engine.ts, types.ts, pictures.ts) with a VARIANTS config.
+    — classic: 25 cards 9/8/7/1 (words); pictures: 20 cards 8/7/4/1 (images). createGame({variant}) builds either board.
+      GameState now carries variant + gridCols; Card gains image. validateClue skips empty (picture) words to avoid a "".includes bug.
+[2026-07-11] variants: Extended wire protocol (GameVariant, CardView.image, RoomView.variant/gridCols, room:create variant).
+      Room stores variant (chosen at creation); gameServer passes it to createGame; buildRoomView emits image + variant.
+[2026-07-11] variants: Persist variant in game history (Prisma GameRecord.variant, default classic); db push + client regenerated.
+[2026-07-11] variants: Frontend — main page game selector (Codenames vs Pictures), CardTile renders images with colored
+      reveal overlays and spymaster dots, header shows the variant. grid stays 5 columns (both variants).
+[2026-07-11] variants: Tests — added 4 pictures unit tests (21 total) and parameterized E2E to cover BOTH variants (3 E2E pass).
+[2026-07-11] verify: typecheck clean; unit 21/21; E2E 3/3 (classic + pictures full games); build OK; assets serve (200, image/jpeg).
+
+[2026-07-11] ux: Added Exit room (all players) and Return to lobby (all players when finished; host mid-game).
+    — server game:newGame now allowed for any player once the game is finished; only host during play. Header "Exit" button + Player-tab "Leave match".
+[2026-07-11] ux: Added synthesized sound effects (Web Audio, no asset files) for select/turn/clue/message/correct/wrong/neutral/assassin/win/lose.
+    — Event-based: useRoom diffs consecutive room views to detect reveals/turn/clue/finish/chat and plays the matching tone. select plays on card tap.
+      No bundled audio — offline-friendly, CSP-safe, no licensing. Effects on/off + volume in Preferences. ("double agent" maps to the assassin cue.)
+[2026-07-11] ux: Themed lobby redesign — Blue | GAME SETTINGS | Red columns, Operatives/Spymasters panels, spectators header, JOIN TEAM buttons.
+    — Host can switch variant (room:setVariant) and timer in the centre panel, plus Reset/Randomize teams. Matches the reference layout with our own theme.
+[2026-07-11] ux: Added Settings modal (Admin/Player/Preferences/Accessibility tabs) and a Rules modal; room header with players count, Rules, Settings, Exit.
+    — Admin: players list, Lock teams, Reset/Randomize, end-game. Player: nickname, role assignment, Leave match.
+[2026-07-11] a11y/prefs: Client preferences store (localStorage) + PrefsController applying theme (dark/light/system), text size, reduced motion to <html>.
+    — Accessibility: text size, colorblind assistive symbols on cards (▲●■✖), reduced-motion. Preferences: sound, effects volume, dark mode, always-show-guess hint.
+[2026-07-11] server: Added teams:reset / teams:randomize / teams:lock (host) and room:setVariant (host, lobby); teamsLocked enforced in setTeam/setRole and surfaced in RoomView.
+[2026-07-11] build-note: A production build corrupted under host memory pressure caused a room-page 500 (dev rendered fine). `rm -rf .next` + rebuild fixed it.
+    — Environmental (RangeError: Array buffer allocation failed during webpack cache), not a code fault. E2E green after clean rebuild.
+[2026-07-11] verify(ux): typecheck clean; unit 21/21; build OK; E2E 3/3 against clean prod build.
+
+[2026-07-11] home: Rebuilt the landing page as an "explore" page with game cards (Words, Pictures), a Join-a-room card, and a How-to-play (Rules) card.
+    — Per user request for a main page with multiple entry cards. Each game card creates a room of that variant directly.
+[2026-07-11] theme: Fixed poor contrast/readability. Default theme now dark (was system; user's OS light theme washed out).
+    — Lobby team headers/labels now use solid team colours with white text; role panels use theme-aware surfaces with colored borders;
+      player chips use bordered theme surfaces instead of translucent black. Legible in both light and dark.
+[2026-07-11] share: Restored copy-invite-link. Header room-code chip copies the URL (✓ feedback); lobby GAME SETTINGS shows code + "Copy invite link".
+[2026-07-11] verify(home/theme/share): typecheck clean; build OK; E2E 3/3 (helpers updated for the new landing page).
+
+[2026-07-12] variant(coop): Added the official base-game co-op variant ("fewer players", rulebook p.8) as game type "coop".
+    — Source of truth: the user-provided Codenames rulebook PDF. This is the co-op-vs-simulated-opponent variant (NOT the separate
+      Codenames Duet product with dual key cards). Human team = blue (9 agents, starts); red = simulated opponent.
+    — Engine: coop config (25/9-8-7-1). On each end of the human turn the simulated opponent covers one enemy (red) agent
+      (advanceAfterTurn -> coopEnemyTurn). Win = all blue agents found; lose = assassin, OR enemy agents all covered. Score = enemy agents left.
+    — 5 coop unit tests added (26 total). Two-player coop E2E added (win path) — passing.
+[2026-07-12] words: Added themed word packs with difficulty (Mixed/Everyday/Animals/Food/Geography/Movies/Sports/Science) + getPackWords().
+    — Host selects a pack in the lobby (word-based variants only). WORD_PACK_META shared to the client; word arrays stay server-side.
+[2026-07-12] lobby: Auto-placement on join — new players are seated automatically (balance teams; first per team = spymaster; coop -> blue),
+    and can still switch team/role to any open seat afterwards. Applies to create + join while in the lobby.
+[2026-07-12] protocol/server: variant "coop"; RoomView.wordPack; events room:setWordPack; setVariant accepts coop and resets seats when
+    switching into/out of co-op; coop start requires only the human team to have a spymaster + operative (2+ players).
+[2026-07-12] frontend: Explore page gained a CO-OP game card; lobby shows a single "YOUR TEAM" column + word-pack selector + CO-OP tile;
+    scoreboard shows "YOUR AGENTS vs ENEMY" in coop; win banner shows MISSION ACCOMPLISHED/FAILED with remaining enemy agents.
+[2026-07-12] note: ">4 players" is not a separate ruleset — Classic already scales (more operatives per team); surfaced as "4+".
+    The separate dual-key *Codenames Duet* product was NOT built (needs its own rulebook); can be added later on request.
+[2026-07-12] verify(coop/packs): typecheck clean; unit 26/26; build OK; E2E 4/4 (classic + pictures + coop + landing).
+
+[2026-07-12] deploy: Prepared production deployment as a Vercel split (Next.js UI on Vercel + standalone Socket.IO server on a container host + Postgres).
+    — Vercel runs Next as serverless functions and can't host a persistent WebSocket server or in-memory rooms, so the realtime server is separate.
+[2026-07-12] deploy/db: Switched Prisma datasource from SQLite to postgresql (dev/prod parity); regenerated client. docker-compose.yml added for local Postgres.
+[2026-07-12] deploy/server: Added server/standalone.ts — Socket.IO-only server (no Next), env CORS via CLIENT_ORIGIN, /healthz probe, binds all interfaces.
+    — server/index.ts (combined Next+Socket) retained for local dev. Scripts: start:socket (realtime), start:web (next start); build now runs `prisma generate && next build`; postinstall runs prisma generate.
+[2026-07-12] deploy/client: getSocket() connects to NEXT_PUBLIC_SOCKET_URL when set (split); falls back to same-origin when empty (local combined). Backward compatible.
+[2026-07-12] deploy/infra: Added Dockerfile (realtime server), .dockerignore, .env.example (Postgres + split vars), and DEPLOY.md (Vercel + Render/Fly + Neon/Supabase, env matrix, migrations, single-instance/scaling note).
+[2026-07-12] verify(deploy): typecheck clean; unit 26/26; production `next build` OK; rehearsed the SPLIT locally (web :3000 + standalone socket :3001, NEXT_PUBLIC_SOCKET_URL baked) — E2E 4/4 through the two-service topology.
