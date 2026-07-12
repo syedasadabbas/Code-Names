@@ -2,21 +2,14 @@
 
 import clsx from "clsx";
 import type { CardView } from "@shared/protocol";
+import Icon, { type IconName } from "./Icon";
 
-// Word-card colours (solid fill + text).
-const revealedClasses: Record<string, string> = {
+// The colored "agent tile" placed over a card when it's revealed.
+const overlayBg: Record<string, string> = {
   red: "bg-agentRed text-white",
   blue: "bg-agentBlue text-white",
   neutral: "bg-bystander text-stone-900",
   assassin: "bg-assassin text-white ring-2 ring-red-500",
-};
-
-// Picture-card reveal overlay (semi-transparent so the image stays visible).
-const imageOverlay: Record<string, string> = {
-  red: "bg-agentRed/80",
-  blue: "bg-agentBlue/80",
-  neutral: "bg-bystander/80",
-  assassin: "bg-assassin/85",
 };
 
 const spymasterRing: Record<string, string> = {
@@ -33,7 +26,14 @@ const spymasterDot: Record<string, string> = {
   assassin: "bg-black",
 };
 
-// Colorblind-assistive glyphs (one distinct shape per role).
+const roleIcon: Record<string, IconName> = {
+  red: "agent",
+  blue: "agent",
+  neutral: "person",
+  assassin: "skull",
+};
+
+// Colorblind-assistive glyphs (geometric shapes, one per role).
 const roleSymbol: Record<string, string> = {
   red: "▲",
   blue: "●",
@@ -79,37 +79,19 @@ export default function CardTile({
         "relative flex items-center justify-center overflow-hidden rounded-lg transition select-none",
         isImage
           ? "aspect-square bg-stone-800"
-          : "aspect-[5/3] px-1 text-center text-xs font-bold uppercase tracking-wide sm:text-sm md:text-base",
-        !isImage &&
-          (revealed ? revealedClasses[role ?? "neutral"] : "bg-stone-100 text-stone-900 shadow"),
-        revealed && "animate-reveal",
+          : "aspect-[5/3] bg-stone-100 px-1 text-center text-xs font-bold uppercase tracking-wide text-stone-900 shadow sm:text-sm md:text-base",
         !revealed && spymaster && role && `ring-4 ${spymasterRing[role]}`,
         canGuess && !revealed && "cursor-pointer hover:-translate-y-0.5 hover:shadow-lg",
         !canGuess && !revealed && "cursor-default",
       )}
     >
       {isImage && (
-        // Local asset; next/image not needed. Fills the square tile.
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={card.image!}
-          alt=""
-          draggable={false}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        <img src={card.image!} alt="" draggable={false} className="absolute inset-0 h-full w-full object-cover" />
       )}
+      {!isImage && !revealed && <span>{card.word}</span>}
 
-      {isImage && revealed && (
-        <div
-          className={clsx(
-            "absolute inset-0 flex items-center justify-center",
-            imageOverlay[role ?? "neutral"],
-          )}
-        >
-          {role === "assassin" && <span className="text-3xl">💀</span>}
-        </div>
-      )}
-
+      {/* Spymaster key hint on an unrevealed picture card */}
       {isImage && !revealed && spymaster && role && (
         <span
           className={clsx(
@@ -119,14 +101,26 @@ export default function CardTile({
         />
       )}
 
-      {!isImage && <span className={clsx(revealed && "opacity-90")}>{card.word}</span>}
-      {!isImage && revealed && role === "assassin" && (
-        <span className="absolute right-1 top-1 text-[10px]">💀</span>
+      {/* Revealed: the agent tile "flies in" and is placed on the card */}
+      {revealed && role && (
+        <div
+          className={clsx(
+            "animate-agent absolute inset-0 flex flex-col items-center justify-center gap-1",
+            overlayBg[role],
+          )}
+        >
+          <Icon name={roleIcon[role]} size={isImage ? 28 : 22} className="opacity-90" />
+          {!isImage && (
+            <span className="px-1 text-center text-[10px] font-bold uppercase leading-tight sm:text-xs">
+              {card.word}
+            </span>
+          )}
+        </div>
       )}
 
       {showSymbol && (
         <span
-          className="absolute left-1 top-1 rounded bg-black/40 px-1 text-xs font-bold leading-none text-white"
+          className="absolute left-1 top-1 z-10 rounded bg-black/40 px-1 text-xs font-bold leading-none text-white"
           aria-hidden
         >
           {roleSymbol[role!]}
@@ -134,7 +128,7 @@ export default function CardTile({
       )}
 
       {showGuessHint && canGuess && !revealed && (
-        <span className="absolute bottom-1 left-1/2 -translate-x-1/2 rounded bg-emerald-600/90 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+        <span className="absolute bottom-1 left-1/2 z-10 -translate-x-1/2 rounded bg-emerald-600/90 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
           Guess
         </span>
       )}

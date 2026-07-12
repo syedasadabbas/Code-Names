@@ -121,3 +121,15 @@ Per project policy, every code change is recorded here with a justification.
     — Client: landing "Quick Match" banner (variant filter Any/Words/Pictures/Co-op + live open-room count) and a lobby ROOM PRIVACY toggle (host).
     — Tests: 7 unit tests for findOpenPublicRoom/matchStats (33 total); E2E "quick match: second player lands in the first player's public room".
 [2026-07-12] verify(matchmaking): typecheck clean; unit 33/33; build OK; E2E 5/5 (landing + classic + pictures + coop + quick-match).
+
+[2026-07-12] ui: Added a Matchmaking modal for Quick Match — animated globe (rotating meridians, radar sweep, blinking pings, gentle zoom),
+    live elapsed timer, and Cancel. Quick Match now shows a ~1.8s search experience; Cancel aborts and leaves the room it joined (no ghost seat).
+[2026-07-12] ui: Restyled the landing page to an on-theme "spy" look (dossier-style game cards with accent bars + icon badges) — removed the neon/AI feel.
+[2026-07-12] ui: Removed ALL decorative emojis app-wide; added src/components/Icon.tsx (inline SVG icon set) used in landing, room header,
+    lobby, settings, and win banner. (Colorblind-assist glyphs remain — functional accessibility, off by default.)
+[2026-07-12] ui: Card reveal now animates an "agent tile" flying in and landing (agent-drop keyframe) with SVG role icons
+    (agent / bystander / assassin) instead of the skull emoji. Respects reduced-motion.
+[2026-07-12] tests: create-<variant> test ids on landing cards; E2E helper updated. All 5 E2E still pass.
+[2026-07-12] verify(ui): typecheck clean; unit 33/33; next build OK; E2E 5/5.
+[2026-07-12] SCOPED (not built): friends/add, direct messaging with sent/delivered/seen, notifications, profile editing.
+    — These require persistent accounts + a presence/social backend; planned as a separate milestone (see chat). Deferred to keep the "100% correct" bar.

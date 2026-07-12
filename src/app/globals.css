@@ -67,6 +67,75 @@ body {
   animation: reveal-pop 260ms ease-out;
 }
 
+/* Agent tile "flies in and is placed" when a card is revealed. */
+@keyframes agent-drop {
+  0% {
+    transform: translateY(-140%) rotate(-10deg) scale(1.15);
+    opacity: 0;
+  }
+  55% {
+    transform: translateY(6%) rotate(2deg) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(-3%) rotate(-1deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+.animate-agent {
+  animation: agent-drop 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: center;
+}
+
+/* Matchmaking globe: rotating meridians, gentle zoom, and blinking pings. */
+@keyframes globe-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes globe-zoom {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes ping-blink {
+  0%,
+  100% {
+    opacity: 0.2;
+    r: 1.5;
+  }
+  50% {
+    opacity: 1;
+    r: 3;
+  }
+}
+@keyframes sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.globe-zoom {
+  animation: globe-zoom 3.2s ease-in-out infinite;
+}
+.globe-spin {
+  animation: globe-spin 8s linear infinite;
+  transform-origin: center;
+}
+.globe-sweep {
+  animation: sweep 2.4s linear infinite;
+  transform-origin: center;
+}
+.globe-ping {
+  animation: ping-blink 1.6s ease-in-out infinite;
+}
+
 /* Reduced-motion: disable non-essential animation/transition. */
 :root[data-motion="reduce"] .animate-reveal {
   animation: none;

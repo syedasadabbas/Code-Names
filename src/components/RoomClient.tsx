@@ -14,6 +14,7 @@ import Chat from "./Chat";
 import Toasts from "./Toasts";
 import SettingsModal from "./SettingsModal";
 import RulesModal from "./RulesModal";
+import Icon from "./Icon";
 
 export default function RoomClient({ code }: { code: string }) {
   const router = useRouter();
@@ -75,7 +76,7 @@ export default function RoomClient({ code }: { code: string }) {
             className="flex items-center gap-1 rounded-full surface px-3 py-1 text-sm hover:brightness-110"
             title="Players / admin"
           >
-            👥 {view.players.length}
+            <Icon name="users" size={16} /> {view.players.length}
           </button>
         </div>
         <div className="flex items-center gap-2 text-sm">
@@ -88,28 +89,30 @@ export default function RoomClient({ code }: { code: string }) {
             className="flex items-center gap-1 rounded surface-2 px-3 py-1 font-mono tracking-widest hover:brightness-110"
           >
             <span>{view.code}</span>
-            <span className="text-xs">{copied ? "✓ copied" : "🔗"}</span>
+            <span className="flex items-center gap-1 text-xs">
+              {copied ? <Icon name="check" size={14} /> : <Icon name="link" size={14} />}
+            </span>
           </button>
           <span className={clsx("h-2 w-2 rounded-full", connected ? "bg-emerald-400" : "bg-red-500")} />
           <button
             onClick={() => setRulesOpen(true)}
-            className="rounded-full surface px-3 py-1 hover:brightness-110"
+            className="flex items-center gap-1.5 rounded-full surface px-3 py-1 hover:brightness-110"
           >
-            📖 Rules
+            <Icon name="rules" size={16} /> Rules
           </button>
           <button
             onClick={() => setSettingsTab("player")}
-            className="rounded-full surface px-3 py-1 hover:brightness-110"
+            className="flex items-center gap-1.5 rounded-full surface px-3 py-1 hover:brightness-110"
             title="Settings"
           >
-            ⚙️ Settings
+            <Icon name="settings" size={16} /> Settings
           </button>
           <button
             onClick={leaveRoom}
-            className="rounded-full bg-red-600 px-3 py-1 font-semibold text-white hover:bg-red-500"
+            className="flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 font-semibold text-white hover:bg-red-500"
             title="Exit room"
           >
-            Exit
+            <Icon name="exit" size={16} /> Exit
           </button>
         </div>
       </header>
@@ -175,7 +178,7 @@ function WinBanner({
 
   if (coop) {
     good = humanWon;
-    title = humanWon ? "🎉 MISSION ACCOMPLISHED!" : "💀 MISSION FAILED";
+    title = humanWon ? "MISSION ACCOMPLISHED!" : "MISSION FAILED";
     if (humanWon) {
       const left = view.score?.red.remaining ?? 0;
       detail = `You found all your agents with ${left} enemy agent${left === 1 ? "" : "s"} never contacted.`;
@@ -187,7 +190,7 @@ function WinBanner({
     }
   } else {
     good = true;
-    title = `🏆 ${view.winner?.toUpperCase()} TEAM WINS!`;
+    title = `${view.winner?.toUpperCase()} TEAM WINS!`;
     detail =
       view.winReason === "assassin-revealed"
         ? "The other team revealed the assassin."
@@ -204,7 +207,10 @@ function WinBanner({
         coop && !good && "bg-agentRed/30 text-red-200",
       )}
     >
-      {title}
+      <div className="flex items-center justify-center gap-2">
+        <Icon name={good ? (coop ? "check" : "crown") : "skull"} size={24} />
+        {title}
+      </div>
       <div className="mt-1 text-sm font-normal text-muted">{detail}</div>
       <button
         onClick={onReturn}

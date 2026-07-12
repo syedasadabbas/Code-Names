@@ -8,13 +8,7 @@ import type { GameVariant } from "@shared/protocol";
 async function createRoom(page: Page, name: string, variant: GameVariant = "classic"): Promise<string> {
   await page.goto("/");
   await page.getByPlaceholder("e.g. Agent Nova").fill(name);
-  const label =
-    variant === "pictures"
-      ? "Create picture game"
-      : variant === "coop"
-        ? "Create co-op game"
-        : "Create word game";
-  await page.getByRole("button", { name: label }).click();
+  await page.getByTestId(`create-${variant}`).click();
   await page.waitForURL(/\/room\/[A-Z0-9]+/);
   return page.url().split("/room/")[1];
 }

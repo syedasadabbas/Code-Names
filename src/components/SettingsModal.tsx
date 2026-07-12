@@ -6,6 +6,7 @@ import type { RoomView, Team } from "@shared/protocol";
 import type { RoomActions } from "@/hooks/useRoom";
 import { usePrefs, setPref } from "@/lib/prefs";
 import Modal from "./Modal";
+import Icon from "./Icon";
 
 type Tab = "admin" | "player" | "preferences" | "accessibility";
 
@@ -123,7 +124,11 @@ function AdminTab({ view, actions }: { view: RoomView; actions: RoomActions }) {
                 )}
               />
               {p.name}
-              {p.isHost && <span className="text-amber-400">👑</span>}
+              {p.isHost && (
+                <span className="text-amber-400">
+                  <Icon name="crown" size={13} />
+                </span>
+              )}
             </li>
           ))}
         </ul>

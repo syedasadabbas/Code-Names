@@ -5,6 +5,7 @@ import clsx from "clsx";
 import type { GameVariant, PlayerView, RoomView, Team } from "@shared/protocol";
 import { WORD_PACK_META } from "@shared/protocol";
 import type { RoomActions } from "@/hooks/useRoom";
+import Icon from "./Icon";
 
 /**
  * Themed pre-game lobby: two team columns (blue / red), each split into
@@ -22,7 +23,9 @@ export default function Lobby({ view, actions }: { view: RoomView; actions: Room
       {/* Spectators header */}
       <div className="flex flex-col items-center gap-2">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold">Spectators 👁</h2>
+          <h2 className="flex items-center gap-2 text-xl font-bold">
+            <Icon name="eye" size={18} /> Spectators
+          </h2>
           {!meSpectator && (
             <button
               data-testid="join-spectators"
@@ -204,7 +207,11 @@ function PlayerChip({
         {p.name.charAt(0).toUpperCase()}
       </span>
       <span className={clsx("truncate", p.id === youId && "font-bold")}>{p.name}</span>
-      {p.isHost && <span title="Host" className="text-amber-400">👑</span>}
+      {p.isHost && (
+        <span title="Host" className="text-amber-400">
+          <Icon name="crown" size={14} />
+        </span>
+      )}
       <span
         className={clsx("ml-auto h-2 w-2 rounded-full", p.connected ? "bg-emerald-400" : "bg-slate-500")}
         title={p.connected ? "online" : "away"}
@@ -227,9 +234,10 @@ function ShareRow({ code }: { code: string }) {
       <span className="rounded-lg surface-2 px-4 py-1.5 font-mono text-xl tracking-[0.35em]">{code}</span>
       <button
         onClick={copy}
-        className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-500"
+        className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-500"
       >
-        {copied ? "✓ Copied" : "🔗 Copy invite link"}
+        <Icon name={copied ? "check" : "link"} size={15} />
+        {copied ? "Copied" : "Copy invite link"}
       </button>
     </div>
   );
@@ -272,7 +280,7 @@ function GameSettings({ view, actions }: { view: RoomView; actions: RoomActions 
 
       {view.variant !== "pictures" && (
         <div className="mb-4 flex items-center gap-3 rounded-xl surface-2 p-3">
-          <span className="text-2xl">📚</span>
+          <span className="text-muted"><Icon name="pack" size={22} /></span>
           <div className="flex-1">
             <p className="text-sm font-bold">WORD PACK</p>
             <p className="text-xs text-muted">Topic &amp; difficulty of the codenames</p>
@@ -293,7 +301,7 @@ function GameSettings({ view, actions }: { view: RoomView; actions: RoomActions 
       )}
 
       <div className="mb-4 flex items-center gap-3 rounded-xl surface-2 p-3">
-        <span className="text-2xl">⏱️</span>
+        <span className="text-muted"><Icon name="clock" size={22} /></span>
         <div className="flex-1">
           <p className="text-sm font-bold">TIMER</p>
           <p className="text-xs text-muted">
@@ -317,7 +325,9 @@ function GameSettings({ view, actions }: { view: RoomView; actions: RoomActions 
       </div>
 
       <div className="mb-4 flex items-center gap-3 rounded-xl surface-2 p-3">
-        <span className="text-2xl">{view.isPublic ? "🌐" : "🔒"}</span>
+        <span className="text-muted">
+          <Icon name={view.isPublic ? "globe" : "lock"} size={22} />
+        </span>
         <div className="flex-1">
           <p className="text-sm font-bold">ROOM PRIVACY</p>
           <p className="text-xs text-muted">
