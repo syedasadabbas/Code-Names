@@ -118,6 +118,8 @@ export interface CreateJoinAck {
   error?: string;
   code?: string;
   identity?: Identity;
+  /** Quick Match only: true when a new public room was created (none open to join). */
+  created?: boolean;
 }
 
 export interface SimpleAck {

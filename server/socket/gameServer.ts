@@ -305,7 +305,7 @@ export class GameServer {
       this.autoPlace(existing, player);
       this.attach(socket, existing, player);
       this.system(existing, `${player.name} joined via Quick Match.`);
-      cb({ ok: true, code: existing.code, identity: { playerId: player.id, token: player.token } });
+      cb({ ok: true, code: existing.code, identity: { playerId: player.id, token: player.token }, created: false });
       this.broadcast(existing);
       return;
     }
@@ -320,7 +320,7 @@ export class GameServer {
     this.autoPlace(room, player);
     this.attach(socket, room, player);
     this.system(room, `${player.name} opened a public room via Quick Match — waiting for players.`);
-    cb({ ok: true, code: room.code, identity: { playerId: player.id, token: player.token } });
+    cb({ ok: true, code: room.code, identity: { playerId: player.id, token: player.token }, created: true });
     this.broadcast(room);
   }
 
