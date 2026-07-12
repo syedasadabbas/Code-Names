@@ -165,6 +165,19 @@ test("coop: two players win by contacting all their agents", async ({ browser })
   await ctx2.close();
 });
 
+test("privacy: host can toggle a room between public and private", async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await createRoom(page, "Host"); // public by default
+  const toggle = page.getByTestId("privacy-toggle");
+  await expect(toggle).toHaveText(/Make private/); // currently public
+  await toggle.click();
+  await expect(toggle).toHaveText(/Make public/); // now private
+  await toggle.click();
+  await expect(toggle).toHaveText(/Make private/); // public again
+  await ctx.close();
+});
+
 test("quick match: second player lands in the first player's public room", async ({ browser }) => {
   test.setTimeout(60_000);
   const c1 = await browser.newContext();

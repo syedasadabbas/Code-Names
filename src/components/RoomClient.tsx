@@ -96,23 +96,24 @@ export default function RoomClient({ code }: { code: string }) {
           <span className={clsx("h-2 w-2 rounded-full", connected ? "bg-emerald-400" : "bg-red-500")} />
           <button
             onClick={() => setRulesOpen(true)}
-            className="flex items-center gap-1.5 rounded-full surface px-3 py-1 hover:brightness-110"
+            className="flex items-center gap-1.5 rounded-full surface px-2.5 py-1 hover:brightness-110 sm:px-3"
+            title="Rules"
           >
-            <Icon name="rules" size={16} /> Rules
+            <Icon name="rules" size={16} /> <span className="hidden sm:inline">Rules</span>
           </button>
           <button
             onClick={() => setSettingsTab("player")}
-            className="flex items-center gap-1.5 rounded-full surface px-3 py-1 hover:brightness-110"
+            className="flex items-center gap-1.5 rounded-full surface px-2.5 py-1 hover:brightness-110 sm:px-3"
             title="Settings"
           >
-            <Icon name="settings" size={16} /> Settings
+            <Icon name="settings" size={16} /> <span className="hidden sm:inline">Settings</span>
           </button>
           <button
             onClick={leaveRoom}
-            className="flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 font-semibold text-white hover:bg-red-500"
+            className="flex items-center gap-1.5 rounded-full bg-red-600 px-2.5 py-1 font-semibold text-white hover:bg-red-500 sm:px-3"
             title="Exit room"
           >
-            <Icon name="exit" size={16} /> Exit
+            <Icon name="exit" size={16} /> <span className="hidden sm:inline">Exit</span>
           </button>
         </div>
       </header>
@@ -131,7 +132,7 @@ export default function RoomClient({ code }: { code: string }) {
       {view.phase === "lobby" ? (
         <Lobby view={view} actions={actions} />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           {/* Hidden state marker for end-to-end tests. */}
           <div
             data-testid="game-state"
@@ -142,14 +143,14 @@ export default function RoomClient({ code }: { code: string }) {
             data-winner={view.winner ?? ""}
             hidden
           />
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             {finished && <WinBanner view={view} onReturn={actions.returnToLobby} />}
             <Scoreboard view={view} />
             <GameBoard view={view} actions={actions} />
             {!finished && <CluePanel view={view} actions={actions} />}
           </div>
 
-          <aside className="flex h-[70vh] flex-col gap-4 lg:h-auto">
+          <aside className="flex h-[70vh] min-w-0 flex-col gap-4 lg:h-auto">
             <PlayersMini view={view} />
             <div className="min-h-0 flex-1">
               <Chat view={view} actions={actions} />

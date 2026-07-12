@@ -245,6 +245,8 @@ function ShareRow({ code }: { code: string }) {
 
 function GameSettings({ view, actions }: { view: RoomView; actions: RoomActions }) {
   const isHost = view.you.isHost;
+  // Default to public when the server didn't send isPublic (rooms are public by default).
+  const isPublic = view.isPublic !== false;
   const [timer, setTimer] = useState<number | "">(view.settings.turnSeconds ?? "");
 
   const variantTile = (variant: GameVariant, title: string, sub: string) => {
@@ -326,12 +328,12 @@ function GameSettings({ view, actions }: { view: RoomView; actions: RoomActions 
 
       <div className="mb-4 flex items-center gap-3 rounded-xl surface-2 p-3">
         <span className="text-muted">
-          <Icon name={view.isPublic ? "globe" : "lock"} size={22} />
+          <Icon name={isPublic ? "globe" : "lock"} size={22} />
         </span>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-bold">ROOM PRIVACY</p>
           <p className="text-xs text-muted">
-            {view.isPublic
+            {isPublic
               ? "Public — strangers can join via Quick Match."
               : "Private — only people with the code can join."}
           </p>
@@ -339,13 +341,13 @@ function GameSettings({ view, actions }: { view: RoomView; actions: RoomActions 
         <button
           data-testid="privacy-toggle"
           disabled={!isHost}
-          onClick={() => actions.setPrivate(view.isPublic)}
+          onClick={() => actions.setPrivate(isPublic)}
           className={clsx(
-            "rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:opacity-60",
-            view.isPublic ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-emerald-600 hover:bg-emerald-500 text-white",
+            "shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:opacity-60",
+            isPublic ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-emerald-600 hover:bg-emerald-500 text-white",
           )}
         >
-          {view.isPublic ? "Make private" : "Make public"}
+          {isPublic ? "Make private" : "Make public"}
         </button>
       </div>
 

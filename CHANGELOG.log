@@ -133,3 +133,12 @@ Per project policy, every code change is recorded here with a justification.
 [2026-07-12] verify(ui): typecheck clean; unit 33/33; next build OK; E2E 5/5.
 [2026-07-12] SCOPED (not built): friends/add, direct messaging with sent/delivered/seen, notifications, profile editing.
     — These require persistent accounts + a presence/social backend; planned as a separate milestone (see chat). Deferred to keep the "100% correct" bar.
+
+[2026-07-12] privacy: Hardened the room-privacy toggle client-side — treats a missing isPublic as public (default), so a room never shows "Private"
+    incorrectly. The toggle logic was already correct; a room showing Private with a dead button indicates a STALE realtime server
+    (privacy shipped in 8952355, after the Dockerfile fix 49df50a). Fix on the deployment side = redeploy Render to latest main.
+    Added an E2E ("privacy: host can toggle a room between public and private") proving the round-trip works on current code.
+[2026-07-12] responsive: viewport meta (width=device-width); room header buttons collapse to icons on mobile (labels hidden < sm);
+    game grid uses minmax(0,1fr) + min-w-0 so the board never overflows; card word text scales down (text-[9px]) and wraps on small screens;
+    landing header wraps. Verified across the layout.
+[2026-07-12] verify(privacy/responsive): typecheck clean; unit 33/33; next build OK; E2E 6/6.

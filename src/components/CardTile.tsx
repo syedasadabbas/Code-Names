@@ -79,7 +79,7 @@ export default function CardTile({
         "relative flex items-center justify-center overflow-hidden rounded-lg transition select-none",
         isImage
           ? "aspect-square bg-stone-800"
-          : "aspect-[5/3] bg-stone-100 px-1 text-center text-xs font-bold uppercase tracking-wide text-stone-900 shadow sm:text-sm md:text-base",
+          : "aspect-[5/3] bg-stone-100 px-0.5 text-center text-[9px] font-bold uppercase leading-tight tracking-tight text-stone-900 shadow sm:px-1 sm:text-sm sm:tracking-wide md:text-base",
         !revealed && spymaster && role && `ring-4 ${spymasterRing[role]}`,
         canGuess && !revealed && "cursor-pointer hover:-translate-y-0.5 hover:shadow-lg",
         !canGuess && !revealed && "cursor-default",
@@ -89,7 +89,7 @@ export default function CardTile({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={card.image!} alt="" draggable={false} className="absolute inset-0 h-full w-full object-cover" />
       )}
-      {!isImage && !revealed && <span>{card.word}</span>}
+      {!isImage && !revealed && <span className="break-words">{card.word}</span>}
 
       {/* Spymaster key hint on an unrevealed picture card */}
       {isImage && !revealed && spymaster && role && (
@@ -111,7 +111,7 @@ export default function CardTile({
         >
           <Icon name={roleIcon[role]} size={isImage ? 28 : 22} className="opacity-90" />
           {!isImage && (
-            <span className="px-1 text-center text-[10px] font-bold uppercase leading-tight sm:text-xs">
+            <span className="break-words px-0.5 text-center text-[9px] font-bold uppercase leading-tight sm:text-xs">
               {card.word}
             </span>
           )}

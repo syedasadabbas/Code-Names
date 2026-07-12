@@ -138,7 +138,7 @@ export default function Home() {
         <MatchmakingModal variantLabel={VARIANT_LABEL[matchVariant]} onCancel={cancelMatch} />
       )}
 
-      <header className="mb-10 flex items-center justify-between gap-4">
+      <header className="mb-10 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-black tracking-[0.2em]">
           <span className="text-agentRed">CODE</span>
           <span className="text-agentBlue">NAMES</span>
