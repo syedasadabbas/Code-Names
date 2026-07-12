@@ -12,7 +12,11 @@ import SocialDock from "@/components/SocialDock";
 import ThemeToggle from "@/components/ThemeToggle";
 import Icon, { type IconName } from "@/components/Icon";
 
-const APK_URL = process.env.NEXT_PUBLIC_APK_URL || "";
+// Public Android APK (EAS cloud build). Override per release with NEXT_PUBLIC_APK_URL;
+// the default points at the current published build so the download works out of the box.
+const APK_URL =
+  process.env.NEXT_PUBLIC_APK_URL ||
+  "https://expo.dev/artifacts/eas/WqmHzftpkBUnw8dv8ipb1BZ8xU77mUgkH4x1s6nkZOU.apk";
 
 const VARIANT_LABEL: Record<string, string> = {
   any: "Any game",

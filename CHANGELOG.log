@@ -188,3 +188,9 @@ Per project policy, every code change is recorded here with a justification.
     socket's late 'disconnect' event clobbered player.connected/socketId, so broadcasts skipped the (actually online) client.
     onDisconnect now ignores a stale socket when the player has already re-attached to a newer socket. Server-side fix — benefits
     web AND mobile. typecheck clean; 7/7 E2E.
+[2026-07-12] feat(download): wire the public Android APK into the home-page download button.
+    The mobile app was built via EAS cloud build (profile "preview" → APK). Set the default APK_URL in
+    src/app/page.tsx to the resulting public Expo artifact URL so the "Get the Android app (APK)" button
+    works out of the box; NEXT_PUBLIC_APK_URL still overrides it per release. Verified the URL returns a
+    downloadable binary (HTTP 206, application/octet-stream). Justification: user wants anyone visiting the
+    web app to download the Android app directly.
