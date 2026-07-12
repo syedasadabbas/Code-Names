@@ -23,7 +23,7 @@ export default function TurnTimer({ deadline }: { deadline: number | null }) {
     <div
       className={clsx(
         "rounded-md px-3 py-1 font-mono text-lg tabular-nums",
-        urgent ? "bg-red-600 text-white animate-pulse" : "bg-slate-700 text-slate-100",
+        urgent ? "bg-red-600 text-white animate-pulse" : "surface-2 text-[var(--text)]",
       )}
       aria-label="Turn timer"
     >

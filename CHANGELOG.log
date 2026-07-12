@@ -169,3 +169,9 @@ Per project policy, every code change is recorded here with a justification.
 [2026-07-12] mobile(social): Added accounts (login/register via web API), socket auth token + reconnect, a Friends/Account
     screen (search/add friends, requests, invites), a global game-invite Alert (Accept -> join room / Decline), and an
     in-room "Invite friends" picker (spots-gated). Mobile typecheck clean; Metro bundle OK.
+[2026-07-12] ui: Made overlays opaque for readability — Modal (Settings/Rules) and the SocialDock panel now use the solid
+    surface token instead of the translucent one. Prevents the see-through, hard-to-read modal look.
+[2026-07-12] theme: Added a prominent dark/light toggle (sun/moon) to the landing and room headers (in addition to Preferences),
+    and converted the remaining hardcoded slate panels (Chat, CluePanel, TurnTimer, AuthPanel, players/join panels) to theme
+    tokens so light mode is coherent across the app.
+[2026-07-12] mobile-link: Landing shows a "Get the Android app (APK)" button when NEXT_PUBLIC_APK_URL is set.

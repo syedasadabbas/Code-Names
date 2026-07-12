@@ -33,7 +33,7 @@ export default function Modal({
     >
       <div
         className={clsx(
-          "surface max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-5 shadow-2xl thin-scroll",
+          "surface-2 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-5 shadow-2xl thin-scroll",
           className,
         )}
         onClick={(e) => e.stopPropagation()}

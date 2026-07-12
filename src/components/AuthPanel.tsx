@@ -64,13 +64,13 @@ export default function AuthPanel() {
   if (profile) {
     return (
       <div className="flex items-center gap-3 text-sm">
-        <span className="text-slate-300">
+        <span className="text-muted">
           Signed in as <span className="font-semibold text-white">{profile.displayName}</span>
         </span>
         <a href="/history" className="text-sky-400 hover:underline">
           History
         </a>
-        <button onClick={logout} className="text-slate-400 hover:text-white">
+        <button onClick={logout} className="text-muted hover:opacity-80">
           Sign out
         </button>
       </div>
@@ -79,7 +79,7 @@ export default function AuthPanel() {
 
   if (!mode) {
     return (
-      <div className="flex items-center gap-3 text-sm text-slate-300">
+      <div className="flex items-center gap-3 text-sm text-muted">
         <span>Playing as guest.</span>
         <button onClick={() => setMode("login")} className="text-sky-400 hover:underline">
           Sign in
@@ -92,23 +92,23 @@ export default function AuthPanel() {
   }
 
   return (
-    <div className="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-800/60 p-4">
+    <div className="surface w-full max-w-sm rounded-lg p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold">{mode === "register" ? "Create account" : "Sign in"}</h3>
-        <button onClick={() => setMode(null)} className="text-slate-400 hover:text-white">
+        <button onClick={() => setMode(null)} className="text-muted hover:opacity-80">
           ✕
         </button>
       </div>
       <div className="space-y-2">
         <input
-          className="w-full rounded bg-slate-900 px-3 py-2 text-sm outline-none ring-1 ring-slate-700 focus:ring-sky-500"
+          className="w-full rounded bg-[var(--surface-2)] px-3 py-2 text-sm outline-none ring-1 ring-[var(--border)] focus:ring-sky-500"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
         {mode === "register" && (
           <input
-            className="w-full rounded bg-slate-900 px-3 py-2 text-sm outline-none ring-1 ring-slate-700 focus:ring-sky-500"
+            className="w-full rounded bg-[var(--surface-2)] px-3 py-2 text-sm outline-none ring-1 ring-[var(--border)] focus:ring-sky-500"
             placeholder="Display name (optional)"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -116,7 +116,7 @@ export default function AuthPanel() {
         )}
         <input
           type="password"
-          className="w-full rounded bg-slate-900 px-3 py-2 text-sm outline-none ring-1 ring-slate-700 focus:ring-sky-500"
+          className="w-full rounded bg-[var(--surface-2)] px-3 py-2 text-sm outline-none ring-1 ring-[var(--border)] focus:ring-sky-500"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

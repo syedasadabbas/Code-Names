@@ -9,7 +9,10 @@ import AuthPanel from "@/components/AuthPanel";
 import RulesModal from "@/components/RulesModal";
 import MatchmakingModal from "@/components/MatchmakingModal";
 import SocialDock from "@/components/SocialDock";
+import ThemeToggle from "@/components/ThemeToggle";
 import Icon, { type IconName } from "@/components/Icon";
+
+const APK_URL = process.env.NEXT_PUBLIC_APK_URL || "";
 
 const MIN_SEARCH_MS = 1800;
 
@@ -146,6 +149,7 @@ export default function Home() {
           <span className="text-agentBlue">NAMES</span>
         </h1>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <button
             onClick={() => setRulesOpen(true)}
             className="flex items-center gap-1.5 rounded-full surface px-3 py-1.5 text-sm font-semibold hover:brightness-110"
@@ -301,6 +305,17 @@ export default function Home() {
       </div>
 
       {err && <p className="mt-6 text-center text-red-400">{err}</p>}
+
+      {APK_URL && (
+        <div className="mt-4 flex justify-center">
+          <a
+            href={APK_URL}
+            className="flex items-center gap-2 rounded-lg border border-[var(--border)] surface px-4 py-2 text-sm font-semibold hover:brightness-110"
+          >
+            <Icon name="download" size={16} /> Get the Android app (APK)
+          </a>
+        </div>
+      )}
 
       <footer className="mt-auto space-y-2 pt-10 text-center text-xs text-muted">
         <p>

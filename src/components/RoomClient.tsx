@@ -15,6 +15,7 @@ import Toasts from "./Toasts";
 import SettingsModal from "./SettingsModal";
 import RulesModal from "./RulesModal";
 import SocialDock from "./SocialDock";
+import ThemeToggle from "./ThemeToggle";
 import Icon from "./Icon";
 
 export default function RoomClient({ code }: { code: string }) {
@@ -55,7 +56,7 @@ export default function RoomClient({ code }: { code: string }) {
   if (!view) {
     return (
       <Centered>
-        <p className="animate-pulse text-slate-400">Connecting to room {code}…</p>
+        <p className="animate-pulse text-muted">Connecting to room {code}…</p>
       </Centered>
     );
   }
@@ -96,6 +97,7 @@ export default function RoomClient({ code }: { code: string }) {
             </span>
           </button>
           <span className={clsx("h-2 w-2 rounded-full", connected ? "bg-emerald-400" : "bg-red-500")} />
+          <ThemeToggle className="flex items-center justify-center rounded-full surface px-2.5 py-1 hover:brightness-110" />
           <button
             onClick={() => setRulesOpen(true)}
             className="flex items-center gap-1.5 rounded-full surface px-2.5 py-1 hover:brightness-110 sm:px-3"
@@ -228,8 +230,8 @@ function WinBanner({
 function PlayersMini({ view }: { view: ReturnType<typeof useRoom>["view"] }) {
   if (!view) return null;
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-3 text-sm">
-      <div className="mb-2 font-semibold text-slate-300">Players</div>
+    <div className="surface rounded-xl p-3 text-sm">
+      <div className="mb-2 font-semibold text-muted">Players</div>
       <ul className="space-y-1">
         {view.players.map((p) => (
           <li key={p.id} className="flex items-center gap-2">
@@ -245,7 +247,7 @@ function PlayersMini({ view }: { view: ReturnType<typeof useRoom>["view"] }) {
             {p.role === "spymaster" && p.team && (
               <span className="text-xs text-amber-400">spymaster</span>
             )}
-            {!p.connected && <span className="text-xs text-slate-500">(away)</span>}
+            {!p.connected && <span className="text-xs text-muted">(away)</span>}
           </li>
         ))}
       </ul>
@@ -257,14 +259,14 @@ function JoinPrompt({ code, onJoin }: { code: string; onJoin: (name: string) => 
   const [name, setName] = useState(getPreferredName());
   return (
     <Centered>
-      <div className="w-full max-w-sm rounded-xl border border-slate-700 bg-slate-800/60 p-6">
+      <div className="surface w-full max-w-sm rounded-xl p-6">
         <h2 className="mb-4 text-center text-xl font-bold">
           Join room <span className="font-mono tracking-widest">{code}</span>
         </h2>
-        <label className="mb-1 block text-sm text-slate-400">Your name</label>
+        <label className="mb-1 block text-sm text-muted">Your name</label>
         <input
           autoFocus
-          className="mb-4 w-full rounded bg-slate-900 px-3 py-2 outline-none ring-1 ring-slate-700 focus:ring-sky-500"
+          className="mb-4 w-full rounded bg-[var(--surface-2)] px-3 py-2 outline-none ring-1 ring-[var(--border)] focus:ring-sky-500"
           placeholder="Agent Nova"
           value={name}
           maxLength={20}

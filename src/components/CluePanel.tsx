@@ -31,7 +31,7 @@ export default function CluePanel({
   }
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-4">
+    <div className="surface rounded-xl p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className={clsx("text-sm font-bold uppercase", teamColor)}>
           {view.currentTeam} team&apos;s turn
@@ -43,20 +43,20 @@ export default function CluePanel({
         <>
           {isCurrentSpymaster ? (
             <div className="space-y-3">
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted">
                 Give a one-word clue and how many cards it points to.
               </p>
               <div className="flex gap-2">
                 <input
                   autoFocus
-                  className="flex-1 rounded bg-slate-900 px-3 py-2 uppercase tracking-wide outline-none ring-1 ring-slate-700 focus:ring-sky-500"
+                  className="flex-1 rounded bg-[var(--surface-2)] px-3 py-2 uppercase tracking-wide outline-none ring-1 ring-[var(--border)] focus:ring-sky-500"
                   placeholder="CLUE"
                   value={word}
                   onChange={(e) => setWord(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitClue()}
                 />
                 <select
-                  className="rounded bg-slate-900 px-2 py-2 outline-none ring-1 ring-slate-700 focus:ring-sky-500"
+                  className="rounded bg-[var(--surface-2)] px-2 py-2 outline-none ring-1 ring-[var(--border)] focus:ring-sky-500"
                   value={count}
                   onChange={(e) => setCount(Number(e.target.value))}
                 >
@@ -75,7 +75,7 @@ export default function CluePanel({
               </div>
             </div>
           ) : (
-            <p className="text-slate-300">
+            <p className="text-muted">
               Waiting for the <span className={teamColor}>{view.currentTeam}</span> spymaster to
               give a clue…
             </p>
@@ -85,13 +85,13 @@ export default function CluePanel({
 
       {view.turnPhase === "guess" && view.clue && (
         <div className="space-y-3">
-          <div className="flex items-baseline justify-center gap-3 rounded-lg bg-slate-900 py-4">
+          <div className="flex items-baseline justify-center gap-3 rounded-lg bg-[var(--surface-2)] py-4">
             <span className="text-3xl font-black uppercase tracking-wider">{view.clue.word}</span>
             <span className="text-3xl font-black text-amber-400">
               {view.clue.count === 0 ? "∞" : view.clue.count}
             </span>
           </div>
-          <p className="text-center text-sm text-slate-400">
+          <p className="text-center text-sm text-muted">
             Guesses remaining:{" "}
             <span className="font-semibold text-white">
               {view.clue.guessesRemaining === null ? "unlimited" : view.clue.guessesRemaining}
@@ -101,12 +101,12 @@ export default function CluePanel({
             <button
               onClick={actions.endTurn}
               disabled={view.clue.guessesMade < 1}
-              className="w-full rounded bg-slate-700 py-2 font-semibold hover:bg-slate-600 disabled:opacity-40"
+              className="w-full rounded border border-[var(--border)] bg-[var(--surface-2)] py-2 font-semibold hover:brightness-110 disabled:opacity-40"
             >
               {view.clue.guessesMade < 1 ? "Make at least one guess" : "End turn"}
             </button>
           ) : (
-            <p className="text-center text-slate-300">
+            <p className="text-center text-muted">
               Waiting for the <span className={teamColor}>{view.currentTeam}</span> operatives to
               guess…
             </p>

@@ -34,7 +34,7 @@ export default function SocialDock({
   return (
     <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-3">
       {open && (
-        <div className="surface flex h-[28rem] w-[22rem] max-w-[92vw] flex-col overflow-hidden rounded-2xl shadow-2xl">
+        <div className="surface-2 flex h-[28rem] w-[22rem] max-w-[92vw] flex-col overflow-hidden rounded-2xl shadow-2xl">
           <ProfileHeader />
           <div className="flex border-b border-[var(--border)] text-sm">
             <TabButton active={tab === "friends"} onClick={() => setTab("friends")} label="Friends" count={social.incoming.length} />
