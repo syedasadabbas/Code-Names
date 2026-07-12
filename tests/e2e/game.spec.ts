@@ -62,6 +62,9 @@ async function playFullGameToWin(browser: Browser, variant: GameVariant, expecte
   await joinRoom(p3.page, code, "BlueMaster");
   await joinRoom(p4.page, code, "BlueField");
 
+  // Clear auto-placed seats first so the explicit assignments below don't hit the
+  // one-spymaster-per-team rule (auto-placement already seats a spymaster).
+  await p1.page.getByRole("button", { name: "Reset teams" }).click();
   await joinTeam(p1.page, "red", true);
   await joinTeam(p2.page, "red", false);
   await joinTeam(p3.page, "blue", true);
@@ -178,33 +181,49 @@ test("privacy: host can toggle a room between public and private", async ({ brow
   await ctx.close();
 });
 
-test("quick match: second player lands in the first player's public room", async ({ browser }) => {
+async function startFind(page: Page, name: string, variant: string) {
+  await page.goto("/");
+  await page.getByPlaceholder("e.g. Agent Nova").fill(name);
+  await page.getByTestId("match-variant").selectOption(variant);
+  await page.getByTestId("find-match").click();
+}
+
+test("quick match: a lone searcher waits (no room is created) until a second player joins", async ({ browser }) => {
   test.setTimeout(60_000);
   const c1 = await browser.newContext();
   const c2 = await browser.newContext();
   const p1 = await c1.newPage();
   const p2 = await c2.newPage();
 
-  // Use the co-op filter so no leftover lobby from other tests interferes
-  // (the co-op game test starts its game, so no open co-op lobby exists).
-  const quickMatch = async (page: Page, name: string) => {
-    await page.goto("/");
-    await page.getByPlaceholder("e.g. Agent Nova").fill(name);
-    await page.getByTestId("match-variant").selectOption("coop");
-    await page.getByTestId("find-match").click();
-    await page.waitForURL(/\/room\/[A-Z0-9]+/);
-    return page.url().split("/room/")[1];
-  };
+  // Pictures has no open public lobby left by other tests (that test starts its game).
+  await startFind(p1, "Q1", "pictures");
+  // A lone searcher must NOT be dropped into a room — they stay searching.
+  await p1.waitForTimeout(1500);
+  expect(p1.url()).not.toMatch(/\/room\//);
 
-  // First player: no open room yet, so a fresh public room is created.
-  const code1 = await quickMatch(p1, "Q1");
-  // Second player: should be matched into the first player's room.
-  const code2 = await quickMatch(p2, "Q2");
+  // A second searcher arrives → the two are paired into one new room.
+  await startFind(p2, "Q2", "pictures");
+  await p1.waitForURL(/\/room\/[A-Z0-9]+/);
+  await p2.waitForURL(/\/room\/[A-Z0-9]+/);
+  expect(p2.url().split("/room/")[1]).toBe(p1.url().split("/room/")[1]);
 
-  expect(code2).toBe(code1);
-  // Both players are present in that room.
-  await expect(p2.getByText("Q1", { exact: false }).first()).toBeVisible();
-  await expect(p1.getByText("Q2", { exact: false }).first()).toBeVisible();
+  await c1.close();
+  await c2.close();
+});
+
+test("quick match: joins an existing open public room", async ({ browser }) => {
+  test.setTimeout(60_000);
+  const c1 = await browser.newContext();
+  const c2 = await browser.newContext();
+  const p1 = await c1.newPage();
+  const p2 = await c2.newPage();
+
+  // p1 hosts a public room (stays connected → it's a joinable open room).
+  const code = await createRoom(p1, "Host", "classic");
+  // p2 Quick Match should join that existing room rather than create a new one.
+  await startFind(p2, "Finder", "classic");
+  await p2.waitForURL(/\/room\/[A-Z0-9]+/);
+  expect(p2.url().split("/room/")[1]).toBe(code);
 
   await c1.close();
   await c2.close();

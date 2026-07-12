@@ -175,3 +175,11 @@ Per project policy, every code change is recorded here with a justification.
     and converted the remaining hardcoded slate panels (Chat, CluePanel, TurnTimer, AuthPanel, players/join panels) to theme
     tokens so light mode is coherent across the app.
 [2026-07-12] mobile-link: Landing shows a "Get the Android app (APK)" button when NEXT_PUBLIC_APK_URL is set.
+[2026-07-12] matchmaking: Reworked Quick Match into a queue. match:find now (1) joins an existing open public room if one
+    has space, else (2) waits in a queue — it NEVER creates a room for a lone player. A new room is created only when two
+    compatible players are both waiting (variant-aware; "any" matches anything). Added match:cancel + match:found events;
+    clients keep showing the "finding" state (globe on web, spinner+Cancel on mobile) until matched. Room fill capped (MATCH_CAP).
+[2026-07-12] rules: Exactly one clue-giver (spymaster) per team. setRole spymaster is rejected if the team already has one,
+    and a spymaster switching to a team that already has one is demoted to operative. Auto-placement already seats only one.
+[2026-07-12] tests: Rewrote matchmaking E2E (lone searcher waits; two searchers pair; joins existing public room) and reset
+    teams before manual assignment in the full-game tests (to respect the one-spymaster rule). All 7 E2E pass.

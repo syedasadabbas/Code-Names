@@ -41,8 +41,17 @@ const nameSchema = z.string().min(1).max(40);
 const teamSchema = z.union([z.literal("red"), z.literal("blue"), z.null()]);
 const roleSchema = z.union([z.literal("spymaster"), z.literal("operative")]);
 
+interface QueueEntry {
+  socketId: string;
+  name: string;
+  userId: string | null;
+  variant: "classic" | "pictures" | "coop" | "any";
+}
+
 export class GameServer {
   private cleanupTimers = new Map<string, NodeJS.Timeout>();
+  /** Players waiting to be matched (no room yet). */
+  private queue: QueueEntry[] = [];
 
   constructor(
     private io: IO,
@@ -63,6 +72,7 @@ export class GameServer {
     socket.on("room:rejoin", (payload, cb) => this.handleRejoin(socket, payload, cb));
     socket.on("room:leave", (cb) => this.handleLeave(socket, cb));
     socket.on("match:find", (payload, cb) => this.handleMatchFind(socket, payload, cb));
+    socket.on("match:cancel", (cb) => this.handleMatchCancel(socket, cb));
     socket.on("match:stats", (cb) => this.handleMatchStats(cb));
     socket.on("room:setPrivate", (payload, cb) => this.handleSetPrivate(socket, payload, cb));
 
@@ -293,12 +303,16 @@ export class GameServer {
     const name = nameSchema.safeParse(payload?.name).success
       ? payload.name
       : socket.data.displayName || "Anonymous";
-    const wantVariant =
-      payload?.variant && payload.variant !== "any" ? this.normalizeVariant(payload.variant) : undefined;
+    const variantPref =
+      payload?.variant === "pictures" || payload?.variant === "coop" || payload?.variant === "classic"
+        ? payload.variant
+        : "any";
+    const wantVariant = variantPref === "any" ? undefined : variantPref;
 
     // Leave any room this socket is still attached to before matching.
     this.detachFromCurrent(socket);
 
+    // 1) If a public room with open spots already exists, join it right away.
     const existing = this.manager.findOpenPublicRoom(wantVariant);
     if (existing) {
       const player = this.manager.addPlayer(existing, name, socket.data.userId ?? null);
@@ -310,17 +324,83 @@ export class GameServer {
       return;
     }
 
-    // No open public room — create a fresh public one and host it.
-    const { room, player } = this.manager.createRoom({
-      name,
-      userId: socket.data.userId ?? null,
-      variant: wantVariant ?? "classic",
-      isPublic: true,
-    });
+    // 2) Otherwise wait in the matchmaking queue (never create a room for a lone
+    //    player). Ack with no code = "still searching"; a room is formed only once
+    //    a second compatible player is also waiting.
+    this.queue = this.queue.filter((e) => e.socketId !== socket.id);
+    this.queue.push({ socketId: socket.id, name, userId: socket.data.userId ?? null, variant: variantPref });
+    cb({ ok: true }); // searching…
+    this.tryPairQueue();
+  }
+
+  private handleMatchCancel(socket: IOSocket, cb?: (a: any) => void): void {
+    this.queue = this.queue.filter((e) => e.socketId !== socket.id);
+    this.ackOk(cb);
+  }
+
+  private variantsCompatible(a: QueueEntry, b: QueueEntry): boolean {
+    return a.variant === b.variant || a.variant === "any" || b.variant === "any";
+  }
+
+  /** Pair up waiting players into a shared room (2+ required to create one). */
+  private tryPairQueue(): void {
+    // First, seat any waiting players into rooms that opened up in the meantime.
+    for (const entry of [...this.queue]) {
+      const want = entry.variant === "any" ? undefined : entry.variant;
+      const open = this.manager.findOpenPublicRoom(want);
+      if (open) {
+        this.queue = this.queue.filter((e) => e.socketId !== entry.socketId);
+        this.seatIntoRoom(entry, open);
+      }
+    }
+
+    // Then form new rooms from compatible pairs still waiting.
+    let progressed = true;
+    while (progressed) {
+      progressed = false;
+      outer: for (let i = 0; i < this.queue.length; i++) {
+        for (let j = i + 1; j < this.queue.length; j++) {
+          const a = this.queue[i];
+          const b = this.queue[j];
+          if (!this.variantsCompatible(a, b)) continue;
+          const variant =
+            a.variant !== "any" ? a.variant : b.variant !== "any" ? b.variant : "classic";
+          // Remove both from the queue and put them in a fresh public room.
+          this.queue = this.queue.filter((e) => e.socketId !== a.socketId && e.socketId !== b.socketId);
+          const host = this.io.sockets.sockets.get(a.socketId) as IOSocket | undefined;
+          if (!host) {
+            // Host vanished; requeue b and retry.
+            this.queue.push(b);
+            progressed = true;
+            break outer;
+          }
+          const { room, player } = this.manager.createRoom({
+            name: a.name,
+            userId: a.userId,
+            variant,
+            isPublic: true,
+          });
+          this.autoPlace(room, player);
+          this.attach(host, room, player);
+          host.emit("match:found", { code: room.code, identity: { playerId: player.id, token: player.token } });
+          this.system(room, `${player.name} was matched via Quick Match.`);
+          this.seatIntoRoom(b, room);
+          this.broadcast(room);
+          progressed = true;
+          break outer;
+        }
+      }
+    }
+  }
+
+  private seatIntoRoom(entry: QueueEntry, room: Room): void {
+    const sock = this.io.sockets.sockets.get(entry.socketId) as IOSocket | undefined;
+    if (!sock) return;
+    const player = this.manager.addPlayer(room, entry.name, entry.userId);
     this.autoPlace(room, player);
-    this.attach(socket, room, player);
-    this.system(room, `${player.name} opened a public room via Quick Match — waiting for players.`);
-    cb({ ok: true, code: room.code, identity: { playerId: player.id, token: player.token }, created: true });
+    this.attach(sock, room, player);
+    sock.emit("match:found", { code: room.code, identity: { playerId: player.id, token: player.token } });
+    this.system(room, `${player.name} joined via Quick Match.`);
     this.broadcast(room);
   }
 
@@ -336,6 +416,8 @@ export class GameServer {
   }
 
   private onDisconnect(socket: IOSocket): void {
+    // Drop out of the matchmaking queue if they were waiting.
+    this.queue = this.queue.filter((e) => e.socketId !== socket.id);
     const ctx = this.currentRoomAndPlayer(socket);
     if (!ctx) return;
     const { room, player } = ctx;
@@ -373,7 +455,12 @@ export class GameServer {
     }
     if (!teamSchema.safeParse(payload?.team).success) return this.ackOk(cb, "Invalid team.");
     player.team = payload.team;
-    if (player.team === null) player.role = "operative"; // spectators are not spymasters
+    // Spectators are never spymasters; and a team may only have one spymaster, so
+    // a spymaster moving to a team that already has one becomes an operative.
+    if (player.team === null) player.role = "operative";
+    else if (player.role === "spymaster" && this.teamHasSpymaster(room, player.team, player.id)) {
+      player.role = "operative";
+    }
     this.ackOk(cb);
     this.broadcast(room);
   }
@@ -387,12 +474,24 @@ export class GameServer {
       return this.ackOk(cb, "Teams are locked by the host.");
     }
     if (!roleSchema.safeParse(payload?.role).success) return this.ackOk(cb, "Invalid role.");
-    if (payload.role === "spymaster" && player.team === null) {
-      return this.ackOk(cb, "Pick a team before becoming spymaster.");
+    if (payload.role === "spymaster") {
+      if (player.team === null) return this.ackOk(cb, "Pick a team before becoming spymaster.");
+      // Exactly one clue-giver per team.
+      if (this.teamHasSpymaster(room, player.team, player.id)) {
+        return this.ackOk(cb, "This team already has a spymaster.");
+      }
     }
     player.role = payload.role;
     this.ackOk(cb);
     this.broadcast(room);
+  }
+
+  /** Whether a team already has a spymaster other than the given player. */
+  private teamHasSpymaster(room: Room, team: Team, exceptPlayerId?: string): boolean {
+    for (const p of room.players.values()) {
+      if (p.team === team && p.role === "spymaster" && p.id !== exceptPlayerId) return true;
+    }
+    return false;
   }
 
   private handleRename(socket: IOSocket, payload: { name: string }, cb?: (a: any) => void): void {

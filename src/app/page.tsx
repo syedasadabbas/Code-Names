@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSocket } from "@/lib/socket";
 import { getPreferredName, setPreferredName, setIdentity } from "@/lib/authClient";
-import type { CreateJoinAck, GameVariant } from "@shared/protocol";
+import type { CreateJoinAck, GameVariant, Identity } from "@shared/protocol";
 import AuthPanel from "@/components/AuthPanel";
 import RulesModal from "@/components/RulesModal";
 import MatchmakingModal from "@/components/MatchmakingModal";
@@ -13,8 +13,6 @@ import ThemeToggle from "@/components/ThemeToggle";
 import Icon, { type IconName } from "@/components/Icon";
 
 const APK_URL = process.env.NEXT_PUBLIC_APK_URL || "";
-
-const MIN_SEARCH_MS = 1800;
 
 const VARIANT_LABEL: Record<string, string> = {
   any: "Any game",
@@ -35,12 +33,26 @@ export default function Home() {
   const [matching, setMatching] = useState(false);
 
   const cancelled = useRef(false);
-  const joinedCode = useRef<string | null>(null);
-  const matchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setName(getPreferredName());
   }, []);
+
+  // While searching, a match is formed asynchronously (when a second player is
+  // also waiting, or a public room opens). Navigate when the server pairs us.
+  useEffect(() => {
+    if (!matching) return;
+    const s = getSocket();
+    const onFound = (data: { code: string; identity: Identity }) => {
+      if (cancelled.current) return;
+      setIdentity(data.code, data.identity);
+      router.push(`/room/${data.code}`);
+    };
+    s.on("match:found", onFound);
+    return () => {
+      s.off("match:found", onFound);
+    };
+  }, [matching, router]);
 
   useEffect(() => {
     const s = getSocket();
@@ -94,44 +106,31 @@ export default function Home() {
   function findMatch() {
     setErr(null);
     cancelled.current = false;
-    joinedCode.current = null;
     setMatching(true);
-    const start = Date.now();
     getSocket().emit(
       "match:find",
       { name: name || "Anonymous", variant: matchVariant },
       (ack: CreateJoinAck) => {
         if (cancelled.current) {
-          // Cancelled before the result arrived — undo the server-side join.
           if (ack.ok && ack.code) getSocket().emit("room:leave");
           return;
         }
         if (ack.ok && ack.code && ack.identity) {
-          joinedCode.current = ack.code;
-          const wait = Math.max(0, MIN_SEARCH_MS - (Date.now() - start));
-          matchTimer.current = setTimeout(() => {
-            if (cancelled.current) return;
-            setIdentity(ack.code!, ack.identity!);
-            router.push(`/room/${ack.code}`);
-          }, wait);
-        } else {
+          // Joined an already-open public room.
+          setIdentity(ack.code, ack.identity);
+          router.push(`/room/${ack.code}`);
+        } else if (!ack.ok) {
           setMatching(false);
           setErr(ack.error || "Could not find a match.");
         }
+        // else: still searching — the match:found listener navigates when paired.
       },
     );
   }
 
   function cancelMatch() {
     cancelled.current = true;
-    if (matchTimer.current) {
-      clearTimeout(matchTimer.current);
-      matchTimer.current = null;
-    }
-    if (joinedCode.current) {
-      getSocket().emit("room:leave");
-      joinedCode.current = null;
-    }
+    getSocket().emit("match:cancel");
     setMatching(false);
   }
 

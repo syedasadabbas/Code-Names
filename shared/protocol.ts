@@ -157,6 +157,7 @@ export interface ClientToServerEvents {
     payload: { name: string; variant?: GameVariant | "any" },
     cb: (ack: CreateJoinAck) => void,
   ) => void;
+  "match:cancel": (cb?: (ack: SimpleAck) => void) => void;
   "match:stats": (cb: (ack: { openRooms: number; players: number }) => void) => void;
 
   "teams:reset": (cb?: (ack: SimpleAck) => void) => void;
@@ -195,6 +196,7 @@ export interface ServerToClientEvents {
   "toast": (payload: { kind: "info" | "error" | "success"; message: string }) => void;
 
   // Social pushes.
+  "match:found": (payload: { code: string; identity: Identity }) => void;
   "friend:changed": () => void; // signal to refetch friend list
   "presence:update": (payload: { userId: string; online: boolean }) => void;
   "dm:new": (message: DMView) => void; // to recipient
