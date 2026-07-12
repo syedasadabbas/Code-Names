@@ -5,10 +5,13 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Install all dependencies (tsx is used to run the TS server).
+# Copy the Prisma schema first: the `postinstall` hook runs `prisma generate`
+# during `npm ci`, so the schema must already be present.
 COPY package.json package-lock.json ./
+COPY prisma ./prisma
 RUN npm ci
 
-# App source + Prisma client generation.
+# App source (schema already copied above).
 COPY . .
 RUN npx prisma generate
 
