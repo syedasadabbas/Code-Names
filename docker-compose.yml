@@ -1,0 +1,19 @@
+# Local development Postgres for the app. Not used in production (use a managed
+# Postgres such as Neon / Supabase / Render / Fly there). Start with:
+#   docker compose up -d
+# then point DATABASE_URL at it and run: npx prisma migrate dev
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: codenames
+    ports:
+      - "5432:5432"
+    volumes:
+      - codenames_pg:/var/lib/postgresql/data
+
+volumes:
+  codenames_pg:
