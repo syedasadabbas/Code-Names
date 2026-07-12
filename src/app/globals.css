@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Trebuchet MS", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+
+  /* Themeable tokens (dark is the default). */
+  --bg: #0f172a;
+  --bg-accent: #1e293b;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --surface: rgba(30, 41, 59, 0.6);
+  --surface-2: #0f172a;
+  --border: #334155;
+}
+
+:root[data-theme="light"] {
+  --bg: #eef2f7;
+  --bg-accent: #dbe3ee;
+  --text: #0f172a;
+  --muted: #475569;
+  --surface: rgba(255, 255, 255, 0.85);
+  --surface-2: #ffffff;
+  --border: #cbd5e1;
+}
+
+/* Text-size accessibility control. */
+:root[data-textsize="sm"] {
+  font-size: 14px;
+}
+:root[data-textsize="md"] {
+  font-size: 16px;
+}
+:root[data-textsize="lg"] {
+  font-size: 18px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 50% -10%, var(--bg-accent), transparent),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle card flip / reveal animation. */
+@keyframes reveal-pop {
+  0% {
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-reveal {
+  animation: reveal-pop 260ms ease-out;
+}
+
+/* Reduced-motion: disable non-essential animation/transition. */
+:root[data-motion="reduce"] .animate-reveal {
+  animation: none;
+}
+:root[data-motion="reduce"] * {
+  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important;
+}
+
+/* Thin scrollbars for chat/history panels. */
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+
+/* Themed surface helpers used by the lobby/modals/header. */
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.surface-2 {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.text-muted {
+  color: var(--muted);
+}
