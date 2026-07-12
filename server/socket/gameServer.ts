@@ -42,10 +42,12 @@ const teamSchema = z.union([z.literal("red"), z.literal("blue"), z.null()]);
 const roleSchema = z.union([z.literal("spymaster"), z.literal("operative")]);
 
 export class GameServer {
-  private manager = new RoomManager();
   private cleanupTimers = new Map<string, NodeJS.Timeout>();
 
-  constructor(private io: IO) {
+  constructor(
+    private io: IO,
+    private manager: RoomManager = new RoomManager(),
+  ) {
     this.io.on("connection", (socket) => this.onConnection(socket));
   }
 

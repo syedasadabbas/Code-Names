@@ -15,7 +15,13 @@ type Tab = "friends" | "messages" | "notifications";
  * Friends + requests + presence, direct messages with delivery/seen receipts,
  * notifications, game invites, and inline display-name editing.
  */
-export default function SocialDock({ inRoom = false }: { inRoom?: boolean }) {
+export default function SocialDock({
+  inRoom = false,
+  canInvite = false,
+}: {
+  inRoom?: boolean;
+  canInvite?: boolean;
+}) {
   const social = useSocial();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -44,7 +50,7 @@ export default function SocialDock({ inRoom = false }: { inRoom?: boolean }) {
             />
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto thin-scroll">
-            {tab === "friends" && <FriendsTab social={social} inRoom={inRoom} />}
+            {tab === "friends" && <FriendsTab social={social} canInvite={inRoom && canInvite} />}
             {tab === "messages" && <MessagesTab social={social} />}
             {tab === "notifications" && (
               <NotificationsTab social={social} onJoin={(code) => router.push(`/room/${code}`)} />
@@ -143,7 +149,7 @@ function ProfileHeader() {
   );
 }
 
-function FriendsTab({ social, inRoom }: { social: ReturnType<typeof useSocial>; inRoom: boolean }) {
+function FriendsTab({ social, canInvite }: { social: ReturnType<typeof useSocial>; canInvite: boolean }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PublicUser[]>([]);
   const [sent, setSent] = useState<Record<string, string>>({});
@@ -233,11 +239,11 @@ function FriendsTab({ social, inRoom }: { social: ReturnType<typeof useSocial>; 
             <button onClick={() => social.actions.openConversation(f)} className="text-sky-400" title="Message">
               <Icon name="rules" size={15} />
             </button>
-            {inRoom && (
+            {canInvite && (
               <button
                 onClick={() => social.actions.invite(f.userId)}
                 className="text-amber-400"
-                title="Invite to game"
+                title="Invite to this room"
               >
                 <Icon name="play" size={15} />
               </button>
@@ -363,12 +369,23 @@ function NotificationsTab({
         <div key={n.id} className="mb-1 flex items-center gap-2 rounded surface-2 px-2 py-2 text-sm">
           <span className="min-w-0 flex-1 truncate">{n.text}</span>
           {n.type === "game_invite" && n.roomCode && (
-            <button
-              onClick={() => onJoin(n.roomCode!)}
-              className="shrink-0 rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500"
-            >
-              Join
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  social.actions.dismissNotification(n.id);
+                  onJoin(n.roomCode!);
+                }}
+                className="shrink-0 rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500"
+              >
+                Accept
+              </button>
+              <button
+                onClick={() => social.actions.dismissNotification(n.id)}
+                className="shrink-0 rounded surface px-2 py-1 text-xs font-semibold hover:brightness-110"
+              >
+                Decline
+              </button>
+            </>
           )}
         </div>
       ))}

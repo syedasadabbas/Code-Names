@@ -157,6 +157,10 @@ export function useSocial() {
       getSocket().emit("notif:read", {});
       setNotifications((ns) => ns.map((n) => ({ ...n, read: true })));
     },
+    dismissNotification: (id: string) => {
+      getSocket().emit("notif:read", { id });
+      setNotifications((ns) => ns.filter((n) => n.id !== id));
+    },
     refreshAll: () => {
       refreshFriends();
       refreshConversations();

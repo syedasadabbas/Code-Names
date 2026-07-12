@@ -163,3 +163,9 @@ Per project policy, every code change is recorded here with a justification.
     (Usernames are already unique — enforced at register with a 409 — and each account already gets a cuid id.)
 [2026-07-12] footer: Added a "Built by Decodrs" link (https://decodrs.com) to the landing footer.
 [2026-07-12] verify(leave/search/footer): typecheck clean; unit 33/33; next build OK; E2E 6/6.
+[2026-07-12] invite: Invite friends to a room from the room while team spots are open. Server gates game:invite on
+    spots (lobby + not full) via a RoomManager now shared between GameServer and SocialServer. Web: invite button shown
+    only when in-room and spots available; invite notifications gained Accept (join) + Decline. Verified web E2E 6/6.
+[2026-07-12] mobile(social): Added accounts (login/register via web API), socket auth token + reconnect, a Friends/Account
+    screen (search/add friends, requests, invites), a global game-invite Alert (Accept -> join room / Decline), and an
+    in-room "Invite friends" picker (spots-gated). Mobile typecheck clean; Metro bundle OK.

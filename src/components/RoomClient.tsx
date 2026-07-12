@@ -65,7 +65,7 @@ export default function RoomClient({ code }: { code: string }) {
   return (
     <main className="mx-auto min-h-full max-w-6xl px-3 py-4">
       <Toasts toasts={toasts} />
-      <SocialDock inRoom />
+      <SocialDock inRoom canInvite={view.phase !== "playing" && view.players.length < 30} />
 
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">

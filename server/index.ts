@@ -7,6 +7,7 @@ import next from "next";
 import { Server } from "socket.io";
 import { GameServer } from "./socket/gameServer.js";
 import { SocialServer } from "./social/socialServer.js";
+import { RoomManager } from "./rooms/roomManager.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const port = parseInt(process.env.PORT || "3000", 10);
@@ -31,10 +32,11 @@ app.prepare().then(() => {
     cors: { origin: dev ? "*" : false },
   });
 
+  const manager = new RoomManager();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  new GameServer(io as any);
+  new GameServer(io as any, manager);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  new SocialServer(io as any);
+  new SocialServer(io as any, manager);
 
   server.on("error", (err) => {
     console.error("HTTP server error:", err);

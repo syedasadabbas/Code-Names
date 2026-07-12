@@ -6,6 +6,7 @@
 import type { Server, Socket } from "socket.io";
 import { verifyToken } from "../auth/auth.js";
 import * as social from "../db/social.js";
+import { RoomManager } from "../rooms/roomManager.js";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
@@ -26,7 +27,10 @@ export class SocialServer {
   /** userId -> set of connected socket ids. */
   private online = new Map<string, Set<string>>();
 
-  constructor(private io: IO) {
+  constructor(
+    private io: IO,
+    private manager: RoomManager = new RoomManager(),
+  ) {
     this.io.on("connection", (socket) => this.onConnection(socket));
   }
 
@@ -232,6 +236,13 @@ export class SocialServer {
     if (!userId) return;
     const roomCode = (socket.data as { roomCode?: string }).roomCode;
     if (!roomCode) return cb({ ok: false, error: "Open a room before inviting friends." });
+    const room = this.manager.get(roomCode);
+    if (!room) return cb({ ok: false, error: "Room no longer exists." });
+    // Only invite while there are open team spots (lobby) and the room isn't full.
+    if (room.game && room.game.phase === "playing") {
+      return cb({ ok: false, error: "The game is in progress — no open spots." });
+    }
+    if (room.players.size >= 30) return cb({ ok: false, error: "Room is full." });
     const toUserId = String(p?.toUserId ?? "");
     try {
       if (!(await social.areFriends(userId, toUserId))) {
