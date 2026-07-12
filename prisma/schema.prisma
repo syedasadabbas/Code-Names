@@ -1,0 +1,53 @@
+// Prisma schema — local-first SQLite. Stores optional user accounts and the
+// history of completed games. Live room/game state stays in server memory.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Pooled connection for the app runtime (Neon "-pooler" host / Vercel serverless).
+  url       = env("DATABASE_URL")
+  // Direct (non-pooled) connection used by `prisma migrate`. On Neon this is the
+  // host WITHOUT "-pooler". Locally it can equal DATABASE_URL.
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String              @id @default(cuid())
+  username     String              @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime            @default(now())
+  participations GameParticipant[]
+}
+
+model GameRecord {
+  id           String              @id @default(cuid())
+  roomCode     String
+  variant      String              @default("classic")
+  startingTeam String
+  winner       String?
+  winReason    String?
+  startedAt    DateTime
+  finishedAt   DateTime            @default(now())
+  participants GameParticipant[]
+
+  @@index([roomCode])
+}
+
+model GameParticipant {
+  id           String     @id @default(cuid())
+  gameRecord   GameRecord @relation(fields: [gameRecordId], references: [id], onDelete: Cascade)
+  gameRecordId String
+  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId       String?
+  name         String
+  team         String?
+  role         String
+  won          Boolean    @default(false)
+
+  @@index([gameRecordId])
+  @@index([userId])
+}
