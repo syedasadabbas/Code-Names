@@ -183,3 +183,8 @@ Per project policy, every code change is recorded here with a justification.
     and a spymaster switching to a team that already has one is demoted to operative. Auto-placement already seats only one.
 [2026-07-12] tests: Rewrote matchmaking E2E (lone searcher waits; two searchers pair; joins existing public room) and reset
     teams before manual assignment in the full-game tests (to respect the one-spymaster rule). All 7 E2E pass.
+[2026-07-12] fix(realtime): Fixed a reconnection race where a client (often the host/spymaster, longest-lived socket) would stop
+    receiving room:update until a manual reload. When a socket reconnected with a new id and re-attached the player, the OLD
+    socket's late 'disconnect' event clobbered player.connected/socketId, so broadcasts skipped the (actually online) client.
+    onDisconnect now ignores a stale socket when the player has already re-attached to a newer socket. Server-side fix — benefits
+    web AND mobile. typecheck clean; 7/7 E2E.

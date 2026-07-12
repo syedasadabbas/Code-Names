@@ -421,6 +421,11 @@ export class GameServer {
     const ctx = this.currentRoomAndPlayer(socket);
     if (!ctx) return;
     const { room, player } = ctx;
+    // Reconnection race: if the player already re-attached to a newer socket,
+    // this is the OLD socket disconnecting — don't clobber the live connection,
+    // or the server would stop broadcasting to a client that's actually online
+    // (the "spymaster's screen won't update until reload" bug).
+    if (player.socketId && player.socketId !== socket.id) return;
     player.connected = false;
     player.socketId = null;
     player.lastSeen = Date.now();
