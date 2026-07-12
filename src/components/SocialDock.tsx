@@ -144,32 +144,67 @@ function ProfileHeader() {
 }
 
 function FriendsTab({ social, inRoom }: { social: ReturnType<typeof useSocial>; inRoom: boolean }) {
-  const [username, setUsername] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<PublicUser[]>([]);
+  const [sent, setSent] = useState<Record<string, string>>({});
+  const friendIds = new Set(social.friends.map((f) => f.userId));
 
-  async function add() {
-    const u = username.trim();
-    if (!u) return;
-    const res = await social.actions.addFriend(u);
-    setMsg(res.ok ? "Request sent." : res.error ?? "Failed.");
-    if (res.ok) setUsername("");
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setResults([]);
+      return;
+    }
+    const t = setTimeout(() => {
+      social.actions.searchUsers(q).then(setResults);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [query, social.actions]);
+
+  async function add(u: PublicUser) {
+    const res = await social.actions.addFriend(u.username);
+    setSent((s) => ({ ...s, [u.userId]: res.ok ? "Sent" : res.error ?? "Failed" }));
   }
 
   return (
     <div className="space-y-3 p-3">
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2 rounded surface-2 px-2 py-1.5 ring-1 ring-[var(--border)] focus-within:ring-sky-500">
+        <Icon name="search" size={15} />
         <input
-          className="min-w-0 flex-1 rounded surface-2 px-2 py-1.5 text-sm outline-none ring-1 ring-[var(--border)] focus:ring-sky-500"
-          placeholder="Add friend by username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && add()}
+          className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+          placeholder="Search players by username"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
         />
-        <button onClick={add} className="rounded bg-sky-600 px-3 text-sm font-semibold text-white hover:bg-sky-500">
-          Add
-        </button>
       </div>
-      {msg && <p className="text-xs text-muted">{msg}</p>}
+      {results.length > 0 && (
+        <div>
+          {results.map((u) => {
+            const isFriend = friendIds.has(u.userId);
+            const status = sent[u.userId];
+            return (
+              <div key={u.userId} className="mb-1 flex items-center gap-2 rounded surface-2 px-2 py-1.5 text-sm">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold">{u.displayName}</span>
+                  <span className="block truncate text-xs text-muted">@{u.username}</span>
+                </span>
+                {isFriend ? (
+                  <span className="text-xs text-muted">Friend</span>
+                ) : status ? (
+                  <span className="text-xs text-muted">{status}</span>
+                ) : (
+                  <button onClick={() => add(u)} className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500">
+                    Add
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {query.trim().length >= 2 && results.length === 0 && (
+        <p className="text-xs text-muted">No players found.</p>
+      )}
 
       {social.incoming.length > 0 && (
         <div>

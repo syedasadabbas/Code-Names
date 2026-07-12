@@ -154,3 +154,12 @@ Per project policy, every code change is recorded here with a justification.
     — Verified: typecheck clean; a DB smoke test (scripts/smoke-social.ts) exercised friends/requests/DMs/receipts/notifications end-to-end
       against real Neon Postgres and passed (temp users cleaned up); next build OK; existing E2E 6/6 (guest flows unaffected — dock is account-only).
 [2026-07-12] deploy(db): Pushed the new social tables to Neon (prisma db push). Any future schema change needs the same on the DB.
+
+[2026-07-12] fix(leave): Leaving the room via in-app navigation (logo / Back / anything that isn't Exit) now emits room:leave so other
+    players see you go. useRoom emits room:leave on unmount, guarded by a joinedRef so it only fires after a successful join and NOT on a
+    hard reload/tab-close (React runs no cleanup there) — so reconnection via the disconnect grace still works.
+[2026-07-12] social(search): Added user search — user:search socket event + social.searchUsers (username/displayName, case-insensitive).
+    FriendsTab is now a live search-and-add (250ms debounce) showing matches with Add buttons and Friend/Sent status.
+    (Usernames are already unique — enforced at register with a 409 — and each account already gets a cuid id.)
+[2026-07-12] footer: Added a "Built by Decodrs" link (https://decodrs.com) to the landing footer.
+[2026-07-12] verify(leave/search/footer): typecheck clean; unit 33/33; next build OK; E2E 6/6.

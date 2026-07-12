@@ -47,6 +47,23 @@ function toDM(m: {
   };
 }
 
+export async function searchUsers(query: string, excludeUserId: string, limit = 8): Promise<PublicUser[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const rows = await prisma.user.findMany({
+    where: {
+      id: { not: excludeUserId },
+      OR: [
+        { username: { contains: q, mode: "insensitive" } },
+        { displayName: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    take: limit,
+    orderBy: { username: "asc" },
+  });
+  return rows.map(toPublic);
+}
+
 // --- friends --------------------------------------------------------------
 
 export async function areFriends(a: string, b: string): Promise<boolean> {

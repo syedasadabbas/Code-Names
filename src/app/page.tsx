@@ -302,9 +302,22 @@ export default function Home() {
 
       {err && <p className="mt-6 text-center text-red-400">{err}</p>}
 
-      <footer className="mt-auto pt-10 text-center text-xs text-muted">
-        A fan-made online implementation of Codenames &amp; Codenames: Pictures (designed by Vlaada
-        Chvátil, published by Czech Games Edition). For private play with friends.
+      <footer className="mt-auto space-y-2 pt-10 text-center text-xs text-muted">
+        <p>
+          Built by{" "}
+          <a
+            href="https://decodrs.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-sky-400 hover:underline"
+          >
+            Decodrs
+          </a>
+        </p>
+        <p>
+          A fan-made online implementation of Codenames &amp; Codenames: Pictures (designed by Vlaada
+          Chvátil, published by Czech Games Edition). For private play with friends.
+        </p>
       </footer>
     </main>
   );

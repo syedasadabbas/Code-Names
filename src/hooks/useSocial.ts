@@ -119,6 +119,10 @@ export function useSocial() {
   }, []);
 
   const actions = {
+    searchUsers: (query: string) =>
+      new Promise<PublicUser[]>((resolve) =>
+        getSocket().emit("user:search", { query }, (d) => resolve(d.users)),
+      ),
     addFriend: (username: string) =>
       new Promise<{ ok: boolean; error?: string }>((resolve) =>
         getSocket().emit("friend:add", { username }, (a) => {

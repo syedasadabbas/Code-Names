@@ -11,6 +11,7 @@ import type {
   ServerToClientEvents,
   SimpleAck,
   DMView,
+  PublicUser,
 } from "../../shared/protocol.js";
 
 interface SocketData {
@@ -56,6 +57,7 @@ export class SocialServer {
       await this.register(socket, payload.userId);
     }
 
+    socket.on("user:search", (p, cb) => void this.handleUserSearch(socket, p, cb));
     socket.on("friend:add", (p, cb) => void this.handleFriendAdd(socket, p, cb));
     socket.on("friend:respond", (p, cb) => void this.handleFriendRespond(socket, p, cb));
     socket.on("friend:remove", (p, cb) => void this.handleFriendRemove(socket, p, cb));
@@ -114,6 +116,19 @@ export class SocialServer {
       return null;
     }
     return userId;
+  }
+
+  // --- user search --------------------------------------------------------
+
+  private async handleUserSearch(socket: IOSocket, p: { query: string }, cb: (d: { users: PublicUser[] }) => void) {
+    const userId = socket.data.userId;
+    if (!userId) return cb({ users: [] });
+    try {
+      cb({ users: await social.searchUsers(String(p?.query ?? ""), userId) });
+    } catch (err) {
+      console.error("[social] user:search", err);
+      cb({ users: [] });
+    }
   }
 
   // --- friends ------------------------------------------------------------

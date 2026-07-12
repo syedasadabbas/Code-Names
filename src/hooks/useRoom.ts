@@ -109,6 +109,21 @@ export function useRoom(code: string) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
   const prevView = useRef<RoomView | null>(null);
+  const joinedRef = useRef(false);
+
+  // Leave the room when the room view unmounts due to in-app navigation
+  // (logo/Back/Leave), so other players see us go. This does NOT run on a hard
+  // reload/tab-close (the browser destroys the context without React cleanup),
+  // so reconnection via the disconnect grace still works. Guarded by joinedRef
+  // to avoid a spurious leave from React StrictMode's dev-only mount/unmount.
+  useEffect(() => {
+    return () => {
+      if (joinedRef.current) {
+        const s = getSocket();
+        if (s.connected) s.emit("room:leave");
+      }
+    };
+  }, []);
 
   const pushToast = useCallback((kind: Toast["kind"], message: string) => {
     const id = ++toastId.current;
@@ -151,6 +166,7 @@ export function useRoom(code: string) {
         }
       }
       prevView.current = v;
+      joinedRef.current = true;
       setView(v);
       setPhase("joined");
     };

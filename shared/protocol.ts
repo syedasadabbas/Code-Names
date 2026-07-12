@@ -170,6 +170,7 @@ export interface ClientToServerEvents {
   "chat:send": (payload: { text: string }, cb?: (ack: SimpleAck) => void) => void;
 
   // Social (require an authenticated account).
+  "user:search": (payload: { query: string }, cb: (data: { users: PublicUser[] }) => void) => void;
   "friend:add": (payload: { username: string }, cb: (ack: SimpleAck) => void) => void;
   "friend:respond": (payload: { requestId: string; accept: boolean }, cb: (ack: SimpleAck) => void) => void;
   "friend:remove": (payload: { userId: string }, cb?: (ack: SimpleAck) => void) => void;
