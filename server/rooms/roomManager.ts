@@ -43,6 +43,8 @@ export interface Room {
   variant: GameVariant;
   wordPack: string;
   teamsLocked: boolean;
+  /** Whether the room is discoverable via Quick Match. Default true. */
+  isPublic: boolean;
   hostId: string;
   players: Map<string, Player>;
   /** Insertion order for stable rendering. */
@@ -72,6 +74,7 @@ export class RoomManager {
     userId: string | null;
     variant?: GameVariant;
     wordPack?: string;
+    isPublic?: boolean;
     settings?: Partial<RoomSettings>;
   }): { room: Room; player: Player } {
     let code = makeCode();
@@ -85,6 +88,7 @@ export class RoomManager {
       variant: validVariant,
       wordPack: host.wordPack || "mixed",
       teamsLocked: false,
+      isPublic: host.isPublic !== false,
       hostId: player.id,
       players: new Map([[player.id, player]]),
       order: [player.id],
@@ -155,6 +159,41 @@ export class RoomManager {
   allRooms(): Room[] {
     return [...this.rooms.values()];
   }
+
+  /** Max players a room may already have to still be offered by Quick Match. */
+  static readonly MATCH_CAP = 10;
+
+  /**
+   * Find the best open public room to matchmake into: public, still in the lobby
+   * (no game started), has at least one connected player, has capacity, and
+   * matches the requested variant (if any). Returns the fullest such room so
+   * games reach the minimum player count sooner.
+   */
+  findOpenPublicRoom(variant?: GameVariant): Room | null {
+    const candidates = this.allRooms().filter(
+      (r) =>
+        r.isPublic &&
+        r.game === null &&
+        this.connectedCount(r) > 0 &&
+        r.players.size < RoomManager.MATCH_CAP &&
+        (!variant || r.variant === variant),
+    );
+    candidates.sort((a, b) => b.players.size - a.players.size);
+    return candidates[0] ?? null;
+  }
+
+  /** Count of open public lobby rooms and players waiting in them. */
+  matchStats(): { openRooms: number; players: number } {
+    let openRooms = 0;
+    let players = 0;
+    for (const r of this.allRooms()) {
+      if (r.isPublic && r.game === null && this.connectedCount(r) > 0 && r.players.size < RoomManager.MATCH_CAP) {
+        openRooms += 1;
+        players += r.players.size;
+      }
+    }
+    return { openRooms, players };
+  }
 }
 
 // -------------------------------------------------------------------------
@@ -223,6 +262,7 @@ export function buildRoomView(room: Room, viewerId: string): RoomView {
     variant,
     gridCols: game?.gridCols ?? VARIANTS[variant].gridCols,
     teamsLocked: room.teamsLocked,
+    isPublic: room.isPublic,
     wordPack: room.wordPack,
     hostId: room.hostId,
     players,

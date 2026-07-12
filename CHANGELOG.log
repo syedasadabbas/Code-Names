@@ -112,3 +112,12 @@ Per project policy, every code change is recorded here with a justification.
 [2026-07-12] deploy/client: getSocket() connects to NEXT_PUBLIC_SOCKET_URL when set (split); falls back to same-origin when empty (local combined). Backward compatible.
 [2026-07-12] deploy/infra: Added Dockerfile (realtime server), .dockerignore, .env.example (Postgres + split vars), and DEPLOY.md (Vercel + Render/Fly + Neon/Supabase, env matrix, migrations, single-instance/scaling note).
 [2026-07-12] verify(deploy): typecheck clean; unit 26/26; production `next build` OK; rehearsed the SPLIT locally (web :3000 + standalone socket :3001, NEXT_PUBLIC_SOCKET_URL baked) — E2E 4/4 through the two-service topology.
+
+[2026-07-12] matchmaking: Added Quick Match (find/random match) + room privacy toggle.
+    — Rooms carry isPublic (default true). RoomManager.findOpenPublicRoom(variant) returns the fullest open public LOBBY room (game not started, has a
+      connected player, < MATCH_CAP=10 players, variant match); matchStats() reports open rooms + players waiting.
+    — Socket: match:find (join the best open public room, else create+host a public room), match:stats, room:setPrivate (host, lobby). match:find first
+      detaches the socket from any current room to avoid ghost seats.
+    — Client: landing "Quick Match" banner (variant filter Any/Words/Pictures/Co-op + live open-room count) and a lobby ROOM PRIVACY toggle (host).
+    — Tests: 7 unit tests for findOpenPublicRoom/matchStats (33 total); E2E "quick match: second player lands in the first player's public room".
+[2026-07-12] verify(matchmaking): typecheck clean; unit 33/33; build OK; E2E 5/5 (landing + classic + pictures + coop + quick-match).

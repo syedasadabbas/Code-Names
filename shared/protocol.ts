@@ -74,6 +74,8 @@ export interface RoomView {
   gridCols: number;
   /** When true, only the host may move players between teams/roles. */
   teamsLocked: boolean;
+  /** When true, the room can be found via Quick Match. Host can toggle it off. */
+  isPublic: boolean;
   /** Selected word-pack id (word-based variants only). */
   wordPack: string;
   hostId: string;
@@ -147,6 +149,13 @@ export interface ClientToServerEvents {
   "settings:update": (payload: Partial<RoomSettings>, cb?: (ack: SimpleAck) => void) => void;
   "room:setVariant": (payload: { variant: GameVariant }, cb?: (ack: SimpleAck) => void) => void;
   "room:setWordPack": (payload: { packId: string }, cb?: (ack: SimpleAck) => void) => void;
+  "room:setPrivate": (payload: { isPrivate: boolean }, cb?: (ack: SimpleAck) => void) => void;
+
+  "match:find": (
+    payload: { name: string; variant?: GameVariant | "any" },
+    cb: (ack: CreateJoinAck) => void,
+  ) => void;
+  "match:stats": (cb: (ack: { openRooms: number; players: number }) => void) => void;
 
   "teams:reset": (cb?: (ack: SimpleAck) => void) => void;
   "teams:randomize": (cb?: (ack: SimpleAck) => void) => void;

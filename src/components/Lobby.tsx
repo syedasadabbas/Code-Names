@@ -316,6 +316,29 @@ function GameSettings({ view, actions }: { view: RoomView; actions: RoomActions 
         )}
       </div>
 
+      <div className="mb-4 flex items-center gap-3 rounded-xl surface-2 p-3">
+        <span className="text-2xl">{view.isPublic ? "🌐" : "🔒"}</span>
+        <div className="flex-1">
+          <p className="text-sm font-bold">ROOM PRIVACY</p>
+          <p className="text-xs text-muted">
+            {view.isPublic
+              ? "Public — strangers can join via Quick Match."
+              : "Private — only people with the code can join."}
+          </p>
+        </div>
+        <button
+          data-testid="privacy-toggle"
+          disabled={!isHost}
+          onClick={() => actions.setPrivate(view.isPublic)}
+          className={clsx(
+            "rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:opacity-60",
+            view.isPublic ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-emerald-600 hover:bg-emerald-500 text-white",
+          )}
+        >
+          {view.isPublic ? "Make private" : "Make public"}
+        </button>
+      </div>
+
       {isHost && (
         <div className="flex flex-wrap justify-center gap-2">
           <button

@@ -170,3 +170,35 @@ test("coop: two players win by contacting all their agents", async ({ browser })
   await ctx1.close();
   await ctx2.close();
 });
+
+test("quick match: second player lands in the first player's public room", async ({ browser }) => {
+  test.setTimeout(60_000);
+  const c1 = await browser.newContext();
+  const c2 = await browser.newContext();
+  const p1 = await c1.newPage();
+  const p2 = await c2.newPage();
+
+  // Use the co-op filter so no leftover lobby from other tests interferes
+  // (the co-op game test starts its game, so no open co-op lobby exists).
+  const quickMatch = async (page: Page, name: string) => {
+    await page.goto("/");
+    await page.getByPlaceholder("e.g. Agent Nova").fill(name);
+    await page.getByTestId("match-variant").selectOption("coop");
+    await page.getByTestId("find-match").click();
+    await page.waitForURL(/\/room\/[A-Z0-9]+/);
+    return page.url().split("/room/")[1];
+  };
+
+  // First player: no open room yet, so a fresh public room is created.
+  const code1 = await quickMatch(p1, "Q1");
+  // Second player: should be matched into the first player's room.
+  const code2 = await quickMatch(p2, "Q2");
+
+  expect(code2).toBe(code1);
+  // Both players are present in that room.
+  await expect(p2.getByText("Q1", { exact: false }).first()).toBeVisible();
+  await expect(p1.getByText("Q2", { exact: false }).first()).toBeVisible();
+
+  await c1.close();
+  await c2.close();
+});

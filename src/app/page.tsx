@@ -15,10 +15,42 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [matchVariant, setMatchVariant] = useState<GameVariant | "any">("any");
+  const [stats, setStats] = useState<{ openRooms: number; players: number } | null>(null);
 
   useEffect(() => {
     setName(getPreferredName());
   }, []);
+
+  useEffect(() => {
+    const s = getSocket();
+    const load = () => s.emit("match:stats", (r) => setStats(r));
+    if (s.connected) load();
+    s.on("connect", load);
+    const t = setInterval(load, 5000);
+    return () => {
+      clearInterval(t);
+      s.off("connect", load);
+    };
+  }, []);
+
+  function findMatch() {
+    setBusy(true);
+    setErr(null);
+    getSocket().emit(
+      "match:find",
+      { name: name || "Anonymous", variant: matchVariant },
+      (ack: CreateJoinAck) => {
+        setBusy(false);
+        if (ack.ok && ack.code && ack.identity) {
+          setIdentity(ack.code, ack.identity);
+          router.push(`/room/${ack.code}`);
+        } else {
+          setErr(ack.error || "Could not find a match.");
+        }
+      },
+    );
+  }
 
   function remember(n: string) {
     setName(n);
@@ -97,6 +129,40 @@ export default function Home() {
             maxLength={20}
             onChange={(e) => remember(e.target.value)}
           />
+        </div>
+      </section>
+
+      {/* Quick Match */}
+      <section className="mb-6 flex flex-col items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-[#4338ca] to-[#0d9488] p-5 text-white sm:flex-row">
+        <div>
+          <h3 className="text-xl font-black">⚡ Quick Match</h3>
+          <p className="text-sm text-white/80">
+            Jump into an open public room — or start one and wait for players.
+          </p>
+          <p className="mt-1 text-xs text-white/70" data-testid="match-stats">
+            {stats ? `${stats.openRooms} open room${stats.openRooms === 1 ? "" : "s"} · ${stats.players} waiting` : "…"}
+          </p>
+        </div>
+        <div className="flex w-full gap-2 sm:w-auto">
+          <select
+            data-testid="match-variant"
+            value={matchVariant}
+            onChange={(e) => setMatchVariant(e.target.value as GameVariant | "any")}
+            className="rounded-lg bg-white/95 px-3 py-2 text-sm font-semibold text-slate-900 outline-none"
+          >
+            <option value="any">Any game</option>
+            <option value="classic">Words</option>
+            <option value="pictures">Pictures</option>
+            <option value="coop">Co-op</option>
+          </select>
+          <button
+            data-testid="find-match"
+            disabled={busy}
+            onClick={findMatch}
+            className="flex-1 rounded-lg bg-white px-6 py-2 font-bold text-slate-900 transition hover:bg-white/90 disabled:opacity-60 sm:flex-none"
+          >
+            Find a match
+          </button>
         </div>
       </section>
 

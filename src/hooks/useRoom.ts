@@ -31,6 +31,7 @@ export interface RoomActions {
   updateSettings: (settings: Partial<RoomSettings>) => void;
   setVariant: (variant: GameVariant) => void;
   setWordPack: (packId: string) => void;
+  setPrivate: (isPrivate: boolean) => void;
   resetTeams: () => void;
   randomizeTeams: () => void;
   lockTeams: (locked: boolean) => void;
@@ -211,6 +212,7 @@ export function useRoom(code: string) {
     updateSettings: (settings) => getSocket().emit("settings:update", settings, ack),
     setVariant: (variant) => getSocket().emit("room:setVariant", { variant }, ack),
     setWordPack: (packId) => getSocket().emit("room:setWordPack", { packId }, ack),
+    setPrivate: (isPrivate) => getSocket().emit("room:setPrivate", { isPrivate }, ack),
     resetTeams: () => getSocket().emit("teams:reset", ack),
     randomizeTeams: () => getSocket().emit("teams:randomize", ack),
     lockTeams: (locked) => getSocket().emit("teams:lock", { locked }, ack),

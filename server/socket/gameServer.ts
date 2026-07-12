@@ -60,6 +60,9 @@ export class GameServer {
     socket.on("room:join", (payload, cb) => this.handleJoin(socket, payload, cb));
     socket.on("room:rejoin", (payload, cb) => this.handleRejoin(socket, payload, cb));
     socket.on("room:leave", (cb) => this.handleLeave(socket, cb));
+    socket.on("match:find", (payload, cb) => this.handleMatchFind(socket, payload, cb));
+    socket.on("match:stats", (cb) => this.handleMatchStats(cb));
+    socket.on("room:setPrivate", (payload, cb) => this.handleSetPrivate(socket, payload, cb));
 
     socket.on("player:setTeam", (payload, cb) => this.handleSetTeam(socket, payload, cb));
     socket.on("player:setRole", (payload, cb) => this.handleSetRole(socket, payload, cb));
@@ -260,6 +263,74 @@ export class GameServer {
       }
     }
     this.ackOk(cb);
+  }
+
+  /** Cleanly remove a socket from whatever room it is currently attached to. */
+  private detachFromCurrent(socket: IOSocket): void {
+    const ctx = this.currentRoomAndPlayer(socket);
+    if (!ctx) return;
+    const { room, player } = ctx;
+    socket.leave(room.code);
+    this.system(room, `${player.name} left.`);
+    this.manager.removePlayer(room, player.id);
+    socket.data.roomCode = undefined;
+    socket.data.playerId = undefined;
+    if (this.manager.connectedCount(room) === 0) this.scheduleCleanup(room);
+    else this.broadcast(room);
+  }
+
+  private handleMatchStats(cb?: (a: { openRooms: number; players: number }) => void): void {
+    if (cb) cb(this.manager.matchStats());
+  }
+
+  private handleMatchFind(
+    socket: IOSocket,
+    payload: { name: string; variant?: string },
+    cb: (a: any) => void,
+  ): void {
+    const name = nameSchema.safeParse(payload?.name).success
+      ? payload.name
+      : socket.data.displayName || "Anonymous";
+    const wantVariant =
+      payload?.variant && payload.variant !== "any" ? this.normalizeVariant(payload.variant) : undefined;
+
+    // Leave any room this socket is still attached to before matching.
+    this.detachFromCurrent(socket);
+
+    const existing = this.manager.findOpenPublicRoom(wantVariant);
+    if (existing) {
+      const player = this.manager.addPlayer(existing, name, socket.data.userId ?? null);
+      this.autoPlace(existing, player);
+      this.attach(socket, existing, player);
+      this.system(existing, `${player.name} joined via Quick Match.`);
+      cb({ ok: true, code: existing.code, identity: { playerId: player.id, token: player.token } });
+      this.broadcast(existing);
+      return;
+    }
+
+    // No open public room — create a fresh public one and host it.
+    const { room, player } = this.manager.createRoom({
+      name,
+      userId: socket.data.userId ?? null,
+      variant: wantVariant ?? "classic",
+      isPublic: true,
+    });
+    this.autoPlace(room, player);
+    this.attach(socket, room, player);
+    this.system(room, `${player.name} opened a public room via Quick Match — waiting for players.`);
+    cb({ ok: true, code: room.code, identity: { playerId: player.id, token: player.token } });
+    this.broadcast(room);
+  }
+
+  private handleSetPrivate(socket: IOSocket, payload: { isPrivate: boolean }, cb?: (a: any) => void): void {
+    const ctx = this.currentRoomAndPlayer(socket);
+    if (!ctx) return this.ackOk(cb, "You are not in a room.");
+    const { room, player } = ctx;
+    if (player.id !== room.hostId) return this.ackOk(cb, "Only the host can change room privacy.");
+    room.isPublic = !payload?.isPrivate;
+    this.system(room, room.isPublic ? "Room is now public (findable via Quick Match)." : "Room is now private.");
+    this.ackOk(cb);
+    this.broadcast(room);
   }
 
   private onDisconnect(socket: IOSocket): void {
