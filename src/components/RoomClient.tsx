@@ -14,6 +14,7 @@ import Chat from "./Chat";
 import Toasts from "./Toasts";
 import SettingsModal from "./SettingsModal";
 import RulesModal from "./RulesModal";
+import SocialDock from "./SocialDock";
 import Icon from "./Icon";
 
 export default function RoomClient({ code }: { code: string }) {
@@ -64,6 +65,7 @@ export default function RoomClient({ code }: { code: string }) {
   return (
     <main className="mx-auto min-h-full max-w-6xl px-3 py-4">
       <Toasts toasts={toasts} />
+      <SocialDock inRoom />
 
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">

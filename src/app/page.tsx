@@ -8,6 +8,7 @@ import type { CreateJoinAck, GameVariant } from "@shared/protocol";
 import AuthPanel from "@/components/AuthPanel";
 import RulesModal from "@/components/RulesModal";
 import MatchmakingModal from "@/components/MatchmakingModal";
+import SocialDock from "@/components/SocialDock";
 import Icon, { type IconName } from "@/components/Icon";
 
 const MIN_SEARCH_MS = 1800;
@@ -137,6 +138,7 @@ export default function Home() {
       {matching && (
         <MatchmakingModal variantLabel={VARIANT_LABEL[matchVariant]} onCancel={cancelMatch} />
       )}
+      <SocialDock />
 
       <header className="mb-10 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-black tracking-[0.2em]">

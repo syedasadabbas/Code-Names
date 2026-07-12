@@ -37,6 +37,57 @@ model GameRecord {
   @@index([roomCode])
 }
 
+model FriendRequest {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  status     String   @default("pending") // pending | accepted | declined
+  createdAt  DateTime @default(now())
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId])
+  @@index([fromUserId])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  // Normalised so a friendship is stored once: userAId < userBId.
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
+}
+
+model DirectMessage {
+  id          String    @id @default(cuid())
+  fromUserId  String
+  toUserId    String
+  body        String
+  createdAt   DateTime  @default(now())
+  deliveredAt DateTime?
+  seenAt      DateTime?
+
+  @@index([fromUserId, toUserId])
+  @@index([toUserId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String // recipient
+  type      String // friend_request | friend_accepted | game_invite | message
+  actorId   String?
+  actorName String?
+  roomCode  String?
+  text      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 model GameParticipant {
   id           String     @id @default(cuid())
   gameRecord   GameRecord @relation(fields: [gameRecordId], references: [id], onDelete: Cascade)

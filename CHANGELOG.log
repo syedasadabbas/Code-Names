@@ -142,3 +142,15 @@ Per project policy, every code change is recorded here with a justification.
     game grid uses minmax(0,1fr) + min-w-0 so the board never overflows; card word text scales down (text-[9px]) and wraps on small screens;
     landing header wraps. Verified across the layout.
 [2026-07-12] verify(privacy/responsive): typecheck clean; unit 33/33; next build OK; E2E 6/6.
+
+[2026-07-12] social: Implemented the full social platform (account-only; guests keep quick play).
+    — DB models: FriendRequest, Friendship (normalised pair), DirectMessage (deliveredAt/seenAt), Notification. server/db/social.ts helpers.
+    — server/social/socialServer.ts: presence registry (userId -> sockets), friends (add/accept/decline/remove, auto-accept reverse request),
+      game invites (ping a friend to your room), DMs with sent/delivered/seen receipts (deliver-on-connect for offline msgs), notifications.
+      Runs alongside GameServer on the same io; wired into index.ts + standalone.ts.
+    — Profile: PATCH /api/profile updates displayName and reissues the JWT.
+    — Client: useSocial hook + SocialDock (floating hub) — friends & requests, presence dots, DM threads with receipts,
+      notifications with Join-invite, inline display-name edit. Rendered on landing + in room (invite enabled in room).
+    — Verified: typecheck clean; a DB smoke test (scripts/smoke-social.ts) exercised friends/requests/DMs/receipts/notifications end-to-end
+      against real Neon Postgres and passed (temp users cleaned up); next build OK; existing E2E 6/6 (guest flows unaffected — dock is account-only).
+[2026-07-12] deploy(db): Pushed the new social tables to Neon (prisma db push). Any future schema change needs the same on the DB.

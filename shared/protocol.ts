@@ -168,12 +168,36 @@ export interface ClientToServerEvents {
   "game:newGame": (cb?: (ack: SimpleAck) => void) => void;
 
   "chat:send": (payload: { text: string }, cb?: (ack: SimpleAck) => void) => void;
+
+  // Social (require an authenticated account).
+  "friend:add": (payload: { username: string }, cb: (ack: SimpleAck) => void) => void;
+  "friend:respond": (payload: { requestId: string; accept: boolean }, cb: (ack: SimpleAck) => void) => void;
+  "friend:remove": (payload: { userId: string }, cb?: (ack: SimpleAck) => void) => void;
+  "friend:list": (cb: (data: FriendsData) => void) => void;
+  "game:invite": (payload: { toUserId: string }, cb: (ack: SimpleAck) => void) => void;
+  "dm:send": (
+    payload: { toUserId: string; body: string },
+    cb: (ack: { ok: boolean; error?: string; message?: DMView }) => void,
+  ) => void;
+  "dm:history": (payload: { withUserId: string }, cb: (data: { messages: DMView[] }) => void) => void;
+  "dm:read": (payload: { withUserId: string }, cb?: (ack: SimpleAck) => void) => void;
+  "dm:conversations": (cb: (data: { conversations: ConversationView[] }) => void) => void;
+  "notif:list": (cb: (data: { notifications: NotificationView[] }) => void) => void;
+  "notif:read": (payload: { id?: string }, cb?: (ack: SimpleAck) => void) => void;
 }
 
 export interface ServerToClientEvents {
   "room:update": (view: RoomView) => void;
   "room:closed": (payload: { reason: string }) => void;
   "toast": (payload: { kind: "info" | "error" | "success"; message: string }) => void;
+
+  // Social pushes.
+  "friend:changed": () => void; // signal to refetch friend list
+  "presence:update": (payload: { userId: string; online: boolean }) => void;
+  "dm:new": (message: DMView) => void; // to recipient
+  "dm:delivered": (payload: { messageId: string; at: number }) => void; // to sender
+  "dm:seen": (payload: { withUserId: string; at: number }) => void; // to sender
+  "notif:new": (n: NotificationView) => void;
 }
 
 /** Client-facing metadata for the selectable word packs (words live server-side). */
@@ -187,6 +211,63 @@ export const WORD_PACK_META: { id: string; name: string; difficulty: "easy" | "m
   { id: "sports", name: "Sports", difficulty: "medium" },
   { id: "science", name: "Science & Tech", difficulty: "hard" },
 ];
+
+// --- Social (accounts only) ----------------------------------------------
+
+export interface PublicUser {
+  userId: string;
+  username: string;
+  displayName: string;
+}
+
+export interface FriendView extends PublicUser {
+  online: boolean;
+}
+
+export interface IncomingRequestView {
+  id: string;
+  from: PublicUser;
+}
+export interface OutgoingRequestView {
+  id: string;
+  to: PublicUser;
+}
+
+export interface FriendsData {
+  friends: FriendView[];
+  incoming: IncomingRequestView[];
+  outgoing: OutgoingRequestView[];
+}
+
+export interface DMView {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  body: string;
+  at: number;
+  deliveredAt: number | null;
+  seenAt: number | null;
+}
+
+export interface ConversationView {
+  user: PublicUser;
+  online: boolean;
+  lastMessage: DMView | null;
+  unread: number;
+}
+
+export type NotificationType = "friend_request" | "friend_accepted" | "game_invite" | "message";
+
+export interface NotificationView {
+  id: string;
+  type: NotificationType;
+  actorId: string | null;
+  actorName: string | null;
+  roomCode: string | null;
+  text: string | null;
+  read: boolean;
+  at: number;
+}
 
 export const ROOM_CODE_LENGTH = 4;
 export const MAX_NAME_LENGTH = 20;

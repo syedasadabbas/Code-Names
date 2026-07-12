@@ -9,6 +9,7 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { GameServer } from "./socket/gameServer.js";
+import { SocialServer } from "./social/socialServer.js";
 
 const port = parseInt(process.env.PORT || "3001", 10);
 
@@ -37,6 +38,8 @@ const io = new Server(server, {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 new GameServer(io as any);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+new SocialServer(io as any);
 
 server.on("error", (err) => {
   console.error("HTTP server error:", err);

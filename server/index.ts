@@ -6,6 +6,7 @@ import { parse } from "node:url";
 import next from "next";
 import { Server } from "socket.io";
 import { GameServer } from "./socket/gameServer.js";
+import { SocialServer } from "./social/socialServer.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const port = parseInt(process.env.PORT || "3000", 10);
@@ -32,6 +33,8 @@ app.prepare().then(() => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   new GameServer(io as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  new SocialServer(io as any);
 
   server.on("error", (err) => {
     console.error("HTTP server error:", err);
